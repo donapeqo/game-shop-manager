@@ -1,0 +1,246 @@
+# Game Shop Management System
+
+A web application for managing a game console rental shop with F1 pit wall inspired design.
+
+![Dashboard Preview](https://via.placeholder.com/800x400/0a0a0f/00d4ff?text=Game+Shop+Management+Dashboard)
+
+## Features
+
+### Core Functionality
+- **Pod Grid Management**: Visual grid layout for gaming pods/areas
+- **Console Assignment**: Tag pods with specific gaming consoles (PS5, Xbox, Switch, PC)
+- **Session Timer**: 30-minute increment timers with manual start/stop
+- **Payment Tracking**: Cash payment recording before session starts
+- **Real-time Dashboard**: Live view of all pods with status indicators
+- **Rental History**: Track and search rentals by customer phone number
+- **Audio Notifications**: 5-minute warning and session expired alerts
+
+### Design
+- **F1 Pit Wall Inspired**: Dark theme with neon accents
+- **Real-time Updates**: Live timer countdowns and status changes
+- **Color-coded Status**: Green (available), Cyan (active), Amber (pending), Red (maintenance)
+- **Responsive Layout**: Works on desktop and tablet devices
+
+## Tech Stack
+
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS
+- **State Management**: Zustand
+- **Routing**: React Router v6
+- **Database**: Supabase (PostgreSQL + Realtime)
+- **Authentication**: Supabase Auth
+- **Icons**: Lucide React
+
+## Quick Start
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Supabase account (free tier works fine)
+
+### 1. Clone and Install
+
+```bash
+cd game-shop-management
+npm install
+```
+
+### 2. Set Up Supabase
+
+1. Create a new project at [https://app.supabase.com](https://app.supabase.com)
+2. Go to SQL Editor and run the migration file:
+   ```bash
+   # Copy contents of supabase/migrations/001_initial_schema.sql
+   # Paste into SQL Editor and run
+   ```
+3. Go to Project Settings → API and copy:
+   - Project URL
+   - anon public API key
+
+### 3. Configure Environment
+
+Create `.env` file in the project root:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+### 4. Create Admin User
+
+1. Go to Authentication → Users in Supabase dashboard
+2. Click "Add user" → "Create new user"
+3. Enter email and password
+4. Run this SQL in SQL Editor:
+
+```sql
+INSERT INTO public.users (id, email, role, name)
+VALUES (
+  'user-id-from-auth-users-table',
+  'admin@yourshop.com',
+  'admin',
+  'Admin User'
+);
+```
+
+### 5. Seed Sample Data (Optional)
+
+```sql
+-- Add consoles
+INSERT INTO public.consoles (name, type, status) VALUES
+  ('PlayStation 5 #1', 'ps5', 'available'),
+  ('PlayStation 5 #2', 'ps5', 'available'),
+  ('Xbox Series X #1', 'xbox', 'available'),
+  ('Xbox Series X #2', 'xbox', 'available'),
+  ('Nintendo Switch #1', 'switch', 'available'),
+  ('Nintendo Switch #2', 'switch', 'available');
+
+-- Add pods (3x3 grid)
+INSERT INTO public.pods (name, row, col, status) VALUES
+  ('Pod A1', 1, 1, 'available'),
+  ('Pod A2', 1, 2, 'available'),
+  ('Pod A3', 1, 3, 'available'),
+  ('Pod B1', 2, 1, 'available'),
+  ('Pod B2', 2, 2, 'available'),
+  ('Pod B3', 2, 3, 'available'),
+  ('Pod C1', 3, 1, 'available'),
+  ('Pod C2', 3, 2, 'available'),
+  ('Pod C3', 3, 3, 'available');
+```
+
+### 6. Run Development Server
+
+```bash
+npm run dev
+```
+
+Open http://localhost:5173 and log in with your admin credentials.
+
+## Usage Guide
+
+### Dashboard
+- View real-time status of all gaming pods
+- See active sessions with live countdown timers
+- Quick stats: total pods, available, active, pending payment
+
+### Creating a Session
+1. Go to Pods page
+2. Click "New Session" on an available pod
+3. Enter customer phone number
+4. Select duration (30-min increments)
+5. Record payment amount
+6. Click "Create Session"
+7. After payment received, click "Start" to begin timer
+
+### Managing Sessions
+- **Start**: Begins the countdown timer
+- **End**: Stops session and marks as completed
+- Timer shows remaining time in mm:ss format
+- Audio alerts at 5 minutes remaining and when expired
+
+### Viewing History
+1. Go to History page
+2. Enter customer phone number
+3. View all past rentals with dates, times, and amounts
+4. See total amount spent by customer
+
+### Console Management
+- Add/edit gaming consoles
+- Assign consoles to pods
+- Track console status (available, in-use, maintenance)
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── layout/         # Layout components (Layout, ProtectedRoute)
+│   ├── pods/           # Pod grid and related components
+│   └── sessions/       # Session timer and creation modal
+├── hooks/              # Custom hooks (useTimer, useAudio)
+├── lib/                # Utilities and Supabase client
+├── pages/              # Page components
+├── store/              # Zustand stores
+└── types/              # TypeScript types
+```
+
+## Customization
+
+### Pricing
+Edit the rate calculation in `CreateSessionModal.tsx`:
+
+```typescript
+const calculateAmount = (mins: number) => {
+  const rate = 5; // Change this to your rate per 30 minutes
+  return ((mins / 30) * rate).toFixed(2);
+};
+```
+
+### Pod Grid Size
+Modify the grid layout in `PodGrid.tsx`:
+
+```typescript
+<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+```
+
+### Colors
+Edit the status colors in `PodGrid.tsx`:
+
+```typescript
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'available': return 'border-green-500/50 bg-green-500/5';
+    case 'occupied': return 'border-cyan-500/50 bg-cyan-500/5';
+    // ...
+  }
+};
+```
+
+## Building for Production
+
+```bash
+npm run build
+```
+
+The built files will be in the `dist/` directory.
+
+## Deployment
+
+### Option 1: Vercel (Recommended)
+1. Push to GitHub
+2. Connect repository to Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy
+
+### Option 2: Netlify
+1. Build locally: `npm run build`
+2. Drag `dist/` folder to Netlify
+3. Or connect GitHub repository
+
+### Option 3: Static Hosting
+Upload the `dist/` folder contents to any static hosting service.
+
+## Troubleshooting
+
+### Audio not playing
+Audio requires user interaction first. Click anywhere on the page before timers expire.
+
+### Real-time updates not working
+Check that Supabase realtime is enabled:
+1. Go to Database → Replication
+2. Ensure `supabase_realtime` publication includes your tables
+
+### Login issues
+- Verify user exists in both `auth.users` and `public.users` tables
+- Check that user role is set to 'admin' or 'staff'
+
+## License
+
+MIT License - feel free to use for your own game shop!
+
+## Support
+
+For issues or questions, please check:
+1. Supabase documentation: https://supabase.com/docs
+2. React documentation: https://react.dev
+3. Tailwind CSS documentation: https://tailwindcss.com
