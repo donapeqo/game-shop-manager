@@ -16,8 +16,6 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
   const isEditing = !!pod;
   
   const [name, setName] = useState(pod?.name || '');
-  const [row, setRow] = useState(pod?.row || 1);
-  const [col, setCol] = useState(pod?.col || 1);
   const [consoleId, setConsoleId] = useState(pod?.console_id || '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,17 +27,12 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
   const validateForm = () => {
     if (!name.trim()) return 'Pod name is required';
     if (!consoleId) return 'Console assignment is required';
-    
-    const positionTaken = existingPods.some(p => 
-      p.row === row && p.col === col && p.id !== pod?.id
-    );
-    if (positionTaken) return 'Position is already occupied by another pod';
-    
-    const nameTaken = existingPods.some(p => 
+
+    const nameTaken = existingPods.some(p =>
       p.name.toLowerCase() === name.trim().toLowerCase() && p.id !== pod?.id
     );
     if (nameTaken) return 'Pod name must be unique';
-    
+
     return '';
   };
 
@@ -59,17 +52,19 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
       if (isEditing && pod) {
         await updatePod(pod.id, {
           name: name.trim(),
-          row,
-          col,
           console_id: consoleId
         });
       } else {
         await createPod({
           name: name.trim(),
-          row,
-          col,
+          row: 1,
+          col: 1,
           console_id: consoleId,
-          status: 'available'
+          status: 'available',
+          canvas_x: 0,
+          canvas_y: 0,
+          canvas_width: 200,
+          canvas_height: 150
         });
       }
       onSuccess();
@@ -149,37 +144,6 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Row Position *
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={10}
-                value={row}
-                onChange={(e) => setRow(parseInt(e.target.value) || 1)}
-                className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Column Position *
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={10}
-                value={col}
-                onChange={(e) => setCol(parseInt(e.target.value) || 1)}
-                className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors"
-                required
-              />
-            </div>
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Assigned Console *
@@ -204,15 +168,7 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
             )}
           </div>
 
-          <div className="bg-[#0a0a0f] rounded-lg p-4 space-y-2">
-            <p className="text-sm text-gray-400 font-medium mb-3">Position Preview</p>
-            <div className="flex items-center gap-4 text-sm">
-              <span className="text-gray-400">Row: </span>
-              <span className="text-cyan-400 font-mono">{row}</span>
-              <span className="text-gray-400">Column: </span>
-              <span className="text-cyan-400 font-mono">{col}</span>
-            </div>
-          </div>
+
 
           <div className="flex gap-3">
             {isEditing && (

@@ -7,13 +7,15 @@ A web application for managing a game console rental shop with F1 pit wall inspi
 ## Features
 
 ### Core Functionality
-- **Pod Grid Management**: Visual grid layout for gaming pods/areas
+- **Pod Canvas Management**: Drag-and-drop canvas layout (1200x800px) with background image support
+- **Two View Modes**: Grid view (canvas) and List view (table) with toggle
 - **Console Assignment**: Tag pods with specific gaming consoles (PS5, Xbox, Switch, PC)
 - **Session Timer**: 30-minute increment timers with manual start/stop
 - **Payment Tracking**: Cash payment recording before session starts
 - **Real-time Dashboard**: Live view of all pods with status indicators
 - **Rental History**: Track and search rentals by customer phone number
 - **Audio Notifications**: 5-minute warning and session expired alerts
+- **Background Upload**: Upload floor plan/shop layout as canvas background (base64, max 2MB)
 
 ### Design
 - **F1 Pit Wall Inspired**: Dark theme with neon accents
@@ -48,14 +50,25 @@ npm install
 ### 2. Set Up Supabase
 
 1. Create a new project at [https://app.supabase.com](https://app.supabase.com)
-2. Go to SQL Editor and run the migration file:
-   ```bash
-   # Copy contents of supabase/migrations/001_initial_schema.sql
-   # Paste into SQL Editor and run
-   ```
+2. Go to SQL Editor and run ALL migration files in order:
+    ```bash
+    # 1. Initial Schema (001_initial_schema.sql)
+    # Creates: users, consoles, pods, sessions, rental_history tables
+    
+    # 2. Canvas Fields Migration (002_add_canvas_fields.sql)
+    # Adds: canvas_x, canvas_y, canvas_width, canvas_height to pods table
+    # Removes: unique constraint on row/col
+    # Creates: index for canvas position queries
+    
+    # 3. Canvas Background Migration (003_add_canvas_background.sql)
+    # Creates: canvas_settings table for background image storage
+    # Adds: background_image, canvas_width, canvas_height fields
+    # Inserts: default canvas settings
+    # Enables: RLS policies for canvas_settings
+    ```
 3. Go to Project Settings → API and copy:
-   - Project URL
-   - anon public API key
+    - Project URL
+    - anon public API key
 
 ### 3. Configure Environment
 
@@ -125,12 +138,20 @@ Open http://localhost:5173 and log in with your admin credentials.
 
 ### Creating a Session
 1. Go to Pods page
-2. Click "New Session" on an available pod
-3. Enter customer phone number
-4. Select duration (30-min increments)
-5. Record payment amount
-6. Click "Create Session"
-7. After payment received, click "Start" to begin timer
+2. Switch to Grid view or List view
+3. Click "New" button on an available pod
+4. Enter customer phone number
+5. Select duration (30-min increments)
+6. Record payment amount
+7. Click "Create Session"
+8. After payment received, click "Start" to begin timer
+
+### Managing Pod Layout (Grid View)
+1. **Drag Pods**: Click and drag pods to reposition on canvas
+2. **Resize Pods**: Hover over pod and use size buttons (small/medium/large)
+3. **Upload Background**: Click "Upload Background" to add floor plan
+4. **Toggle Grid**: Show/hide grid overlay
+5. **Edit Pod**: Double-click pod or click settings icon in List view
 
 ### Managing Sessions
 - **Start**: Begins the countdown timer
@@ -176,11 +197,29 @@ const calculateAmount = (mins: number) => {
 };
 ```
 
-### Pod Grid Size
-Modify the grid layout in `PodGrid.tsx`:
+### Canvas Size
+Modify the canvas dimensions in `CanvasView.tsx`:
 
 ```typescript
-<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+const CANVAS_WIDTH = 1200;  // Change width
+const CANVAS_HEIGHT = 800;  // Change height
+```
+
+### Background Image Limits
+Modify image constraints in `CanvasView.tsx`:
+
+```typescript
+// Max file size (default: 2MB)
+if (file.size > 2 * 1024 * 1024) {
+  alert('Image must be less than 2MB');
+  return;
+}
+
+// Max width for resize (default: 1200px)
+const scale = Math.min(1, 1200 / img.width);
+
+// JPEG quality (default: 0.8 = 80%)
+const base64 = canvas.toDataURL('image/jpeg', 0.8);
 ```
 
 ### Colors

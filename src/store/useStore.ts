@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/lib/supabase';
-import type { User, Pod, Console, Session } from '@/types';
+import type { User, Pod, Console, Session, CanvasSettings } from '@/types';
 
 interface AuthState {
   user: User | null;
@@ -104,14 +104,18 @@ interface PodState {
   pods: Pod[];
   consoles: Console[];
   sessions: Session[];
+  canvasSettings: CanvasSettings | null;
   isLoading: boolean;
   error: string | null;
   
   fetchPods: () => Promise<void>;
   fetchConsoles: () => Promise<void>;
   fetchSessions: () => Promise<void>;
+  fetchCanvasSettings: () => Promise<void>;
   createPod: (pod: Omit<Pod, 'id' | 'created_at' | 'current_session_id'>) => Promise<void>;
   updatePod: (podId: string, updates: Partial<Pod>) => Promise<void>;
+  updatePodPosition: (podId: string, x: number, y: number) => Promise<void>;
+  updatePodSize: (podId: string, width: number, height: number) => Promise<void>;
   deletePod: (podId: string) => Promise<void>;
   createConsole: (console: Omit<Console, 'id' | 'created_at'>) => Promise<void>;
   updateConsole: (consoleId: string, updates: Partial<Console>) => Promise<void>;
@@ -121,6 +125,7 @@ interface PodState {
   cancelSession: (sessionId: string, podId: string) => Promise<void>;
   extendSession: (sessionId: string, additionalMinutes: number, additionalPayment: number) => Promise<void>;
   completeSession: (sessionId: string, podId: string) => Promise<void>;
+  updateCanvasBackground: (base64Image: string | null) => Promise<void>;
   subscribeToChanges: () => void;
 }
 
@@ -128,8 +133,46 @@ export const usePodStore = create<PodState>()((set) => ({
   pods: [],
   consoles: [],
   sessions: [],
+  canvasSettings: null,
   isLoading: false,
   error: null,
+
+  fetchCanvasSettings: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('canvas_settings')
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      set({ canvasSettings: data as CanvasSettings });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch canvas settings'
+      });
+    }
+  },
+
+  updateCanvasBackground: async (base64Image: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('canvas_settings')
+        .update({ background_image: base64Image })
+        .eq('id', (await supabase.from('canvas_settings').select('id').single()).data?.id);
+
+      if (error) throw error;
+
+      set((state) => ({
+        canvasSettings: state.canvasSettings
+          ? { ...state.canvasSettings, background_image: base64Image }
+          : null
+      }));
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to update canvas background'
+      });
+    }
+  },
 
   fetchPods: async () => {
     set({ isLoading: true });
@@ -200,6 +243,50 @@ export const usePodStore = create<PodState>()((set) => ({
     } catch (error) {
       set({ 
         error: error instanceof Error ? error.message : 'Failed to update pod' 
+      });
+    }
+  },
+
+  updatePodPosition: async (podId: string, x: number, y: number) => {
+    try {
+      const { error } = await supabase
+        .from('pods')
+        .update({ canvas_x: x, canvas_y: y })
+        .eq('id', podId);
+
+      if (error) throw error;
+      
+      // Optimistic update
+      set((state) => ({
+        pods: state.pods.map(pod => 
+          pod.id === podId ? { ...pod, canvas_x: x, canvas_y: y } : pod
+        )
+      }));
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to update pod position' 
+      });
+    }
+  },
+
+  updatePodSize: async (podId: string, width: number, height: number) => {
+    try {
+      const { error } = await supabase
+        .from('pods')
+        .update({ canvas_width: width, canvas_height: height })
+        .eq('id', podId);
+
+      if (error) throw error;
+      
+      // Optimistic update
+      set((state) => ({
+        pods: state.pods.map(pod => 
+          pod.id === podId ? { ...pod, canvas_width: width, canvas_height: height } : pod
+        )
+      }));
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to update pod size' 
       });
     }
   },
