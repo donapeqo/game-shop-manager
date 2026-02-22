@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Pod, Console, Session } from '@/types';
 import { SessionTimer } from '@/components/sessions/SessionTimer';
+import { ExtendSessionModal } from '@/components/sessions/ExtendSessionModal';
 import { 
   CheckCircle2, 
   Clock, 
@@ -53,6 +54,7 @@ export function DraggablePod({
   const [showActions, setShowActions] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [currentPos, setCurrentPos] = useState({ x: 0, y: 0 });
+  const [extendSession, setExtendSession] = useState<Session | null>(null);
   const podRef = useRef<HTMLDivElement>(null);
 
   // Use default position if canvas_x/canvas_y are null
@@ -60,11 +62,6 @@ export function DraggablePod({
   const positionY = pod.canvas_y ?? 50;
   const width = pod.canvas_width ?? 200;
   const height = pod.canvas_height ?? 150;
-
-  // Update current position when pod position changes
-  useEffect(() => {
-    setCurrentPos({ x: positionX, y: positionY });
-  }, [positionX, positionY]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,7 +125,8 @@ export function DraggablePod({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
     });
-    
+
+    setCurrentPos({ x: positionX, y: positionY });
     setIsDragging(true);
   };
 
@@ -274,7 +272,7 @@ export function DraggablePod({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  // Open extend modal
+                  if (session) setExtendSession(session);
                 }}
                 className="flex-1 flex items-center justify-center gap-1 px-2 py-1 bg-amber-500 hover:bg-amber-400 text-white text-xs rounded transition-colors"
               >
@@ -355,6 +353,14 @@ export function DraggablePod({
           {pod.status.replace('_', ' ')}
         </span>
       </div>
+
+      {extendSession && (
+        <ExtendSessionModal
+          session={extendSession}
+          onClose={() => setExtendSession(null)}
+          onSuccess={() => setExtendSession(null)}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
-
+import { useState } from 'react';
 import type { Pod, Console, Session } from '@/types';
 import { SessionTimer } from '@/components/sessions/SessionTimer';
+import { ExtendSessionModal } from '@/components/sessions/ExtendSessionModal';
 import { usePodStore } from '@/store/useStore';
 import { 
   Play, 
@@ -31,6 +32,7 @@ export function ActivePodsHorizontal({
   onPayment
 }: ActivePodsHorizontalProps) {
   const { updatePod, updateSession, cancelSession, completeSession } = usePodStore();
+  const [extendSession, setExtendSession] = useState<Session | null>(null);
 
   // Get only active and pending pods
   const activePods = pods.filter(pod => 
@@ -196,7 +198,7 @@ export function ActivePodsHorizontal({
                 {session?.status === 'active' && (
                   <>
                     <button
-                      onClick={() => {/* Open extend modal */}}
+                      onClick={() => setExtendSession(session)}
                       className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-white text-sm rounded-lg transition-colors"
                     >
                       <Timer className="w-4 h-4" />
@@ -225,6 +227,14 @@ export function ActivePodsHorizontal({
           );
         })}
       </div>
+
+      {extendSession && (
+        <ExtendSessionModal
+          session={extendSession}
+          onClose={() => setExtendSession(null)}
+          onSuccess={() => setExtendSession(null)}
+        />
+      )}
     </div>
   );
 }

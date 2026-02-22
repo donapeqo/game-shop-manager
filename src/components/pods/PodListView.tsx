@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Pod, Console, Session, SortField, SortDirection } from '@/types';
 import { SessionTimer } from '@/components/sessions/SessionTimer';
+import { ExtendSessionModal } from '@/components/sessions/ExtendSessionModal';
 import { 
   CheckCircle2, 
   Clock, 
@@ -60,6 +61,7 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [extendSession, setExtendSession] = useState<Session | null>(null);
 
   const getPodConsole = (pod: Pod) => {
     return consoles.find(c => c.id === pod.console_id);
@@ -301,7 +303,7 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
                       {session?.status === 'active' && (
                         <>
                           <button
-                            onClick={() => {/* Open extend modal */}}
+                            onClick={() => setExtendSession(session)}
                             className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-white text-xs rounded-lg transition-colors"
                           >
                             <Timer className="w-3 h-3" />
@@ -346,6 +348,14 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
         <div className="p-8 text-center text-gray-500">
           No pods found matching your criteria
         </div>
+      )}
+
+      {extendSession && (
+        <ExtendSessionModal
+          session={extendSession}
+          onClose={() => setExtendSession(null)}
+          onSuccess={() => setExtendSession(null)}
+        />
       )}
     </div>
   );

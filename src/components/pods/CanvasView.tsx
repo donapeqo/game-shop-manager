@@ -46,7 +46,7 @@ export function CanvasView({
 
   const getPodSession = (pod: Pod) => {
     if (!pod.current_session_id) return null;
-    return sessions.find(s => s.id === pod.current_session_id);
+    return sessions.find(s => s.id === pod.current_session_id) || null;
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

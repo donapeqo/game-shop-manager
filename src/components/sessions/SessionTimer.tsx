@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTimer } from '@/hooks/useTimer';
 import { useAudio } from '@/hooks/useAudio';
 import type { Session } from '@/types';
@@ -12,24 +12,29 @@ interface SessionTimerProps {
 export function SessionTimer({ session, onWarning, onExpired }: SessionTimerProps) {
   const { isExpired, isWarning, formattedTime } = useTimer(session.end_time, 5 * 60 * 1000);
   const { playWarning, playExpired } = useAudio();
-  const [hasPlayedWarning, setHasPlayedWarning] = useState(false);
-  const [hasPlayedExpired, setHasPlayedExpired] = useState(false);
+  const hasPlayedWarningRef = useRef(false);
+  const hasPlayedExpiredRef = useRef(false);
 
   useEffect(() => {
-    if (isWarning && !hasPlayedWarning) {
+    hasPlayedWarningRef.current = false;
+    hasPlayedExpiredRef.current = false;
+  }, [session.id]);
+
+  useEffect(() => {
+    if (isWarning && !hasPlayedWarningRef.current) {
       playWarning();
-      setHasPlayedWarning(true);
+      hasPlayedWarningRef.current = true;
       onWarning?.();
     }
-  }, [isWarning, hasPlayedWarning, playWarning, onWarning]);
+  }, [isWarning, playWarning, onWarning]);
 
   useEffect(() => {
-    if (isExpired && !hasPlayedExpired) {
+    if (isExpired && !hasPlayedExpiredRef.current) {
       playExpired();
-      setHasPlayedExpired(true);
+      hasPlayedExpiredRef.current = true;
       onExpired?.();
     }
-  }, [isExpired, hasPlayedExpired, playExpired, onExpired]);
+  }, [isExpired, playExpired, onExpired]);
 
   const getTimerColor = () => {
     if (isExpired) return 'text-red-500';
