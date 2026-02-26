@@ -28,6 +28,7 @@ interface DraggablePodProps {
   onEdit: () => void;
   onCreateSession: () => void;
   onPayment: () => void;
+  plugState?: 'on' | 'off' | 'offline' | 'loading';
   showControls?: boolean;
 }
 
@@ -47,6 +48,7 @@ export function DraggablePod({
   onEdit,
   onCreateSession,
   onPayment,
+  plugState,
   showControls = false,
 }: DraggablePodProps) {
   const { updatePod, updateSession, cancelSession, completeSession } = usePodStore();
@@ -211,6 +213,22 @@ export function DraggablePod({
           {console ? console.name : 'No console'}
         </span>
       </div>
+
+      {pod.tuya_enabled && (
+        <div className="mb-2">
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] border ${
+            plugState === 'on'
+              ? 'text-green-400 border-green-500/30 bg-green-500/10'
+              : plugState === 'off'
+                ? 'text-gray-300 border-gray-500/30 bg-gray-500/10'
+                : plugState === 'loading'
+                  ? 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10'
+                  : 'text-red-400 border-red-500/30 bg-red-500/10'
+          }`}>
+            plug {plugState || 'loading'}
+          </span>
+        </div>
+      )}
 
       {/* Session Info */}
       {session && (

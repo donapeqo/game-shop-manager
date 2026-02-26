@@ -1,7 +1,10 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Pod, Console, Session, CanvasSettings } from '@/types';
 import { DraggablePod } from './DraggablePod';
 import { ImagePlus, X, Grid3X3 } from 'lucide-react';
+
+const TUYA_GATEWAY_BASE_URL = (import.meta.env.VITE_TUYA_GATEWAY_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
+type PlugState = 'on' | 'off' | 'offline' | 'loading';
 
 interface CanvasViewProps {
   pods: Pod[];
@@ -39,6 +42,63 @@ export function CanvasView({
   const canvasRef = useRef<HTMLDivElement>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [plugStates, setPlugStates] = useState<Record<string, PlugState>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchPlugStates = async () => {
+      const tuyaPods = pods.filter((pod) => pod.tuya_enabled);
+      if (tuyaPods.length === 0) {
+        if (!cancelled) setPlugStates({});
+        return;
+      }
+
+      if (!cancelled) {
+        setPlugStates((prev) => {
+          const next = { ...prev };
+          tuyaPods.forEach((pod) => {
+            if (!next[pod.id]) next[pod.id] = 'loading';
+          });
+          return next;
+        });
+      }
+
+      const results = await Promise.all(
+        tuyaPods.map(async (pod) => {
+          try {
+            const response = await fetch(`${TUYA_GATEWAY_BASE_URL}/api/pods/${pod.id}/status`);
+            if (!response.ok) return [pod.id, 'offline'] as const;
+            const payload = await response.json();
+            const dps = payload?.data?.dps ?? {};
+            const switchOne = dps['1'] ?? dps[1];
+            if (switchOne === true) return [pod.id, 'on'] as const;
+            if (switchOne === false) return [pod.id, 'off'] as const;
+            return [pod.id, 'offline'] as const;
+          } catch {
+            return [pod.id, 'offline'] as const;
+          }
+        })
+      );
+
+      if (!cancelled) {
+        setPlugStates((prev) => {
+          const next = { ...prev };
+          results.forEach(([podId, state]) => {
+            next[podId] = state;
+          });
+          return next;
+        });
+      }
+    };
+
+    fetchPlugStates();
+    const interval = setInterval(fetchPlugStates, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [pods]);
 
   const getPodConsole = (pod: Pod) => {
     return consoles.find(c => c.id === pod.console_id);
@@ -176,6 +236,7 @@ export function CanvasView({
                 const session = getPodSession(pod);
                 if (session) onPayment(session);
               }}
+              plugState={plugStates[pod.id]}
               showControls={showControls}
             />
           ))}

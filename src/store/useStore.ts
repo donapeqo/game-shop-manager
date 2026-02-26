@@ -3,6 +3,35 @@ import { persist } from 'zustand/middleware';
 import { supabase } from '@/lib/supabase';
 import type { User, Pod, Console, Session, CanvasSettings } from '@/types';
 
+const TUYA_GATEWAY_BASE_URL = (import.meta.env.VITE_TUYA_GATEWAY_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
+
+function shouldPowerOn(status: Pod['status']): boolean {
+  return status === 'occupied';
+}
+
+function shouldPowerOff(status: Pod['status']): boolean {
+  return status === 'available' || status === 'maintenance';
+}
+
+async function syncPodPowerForStatus(pod: Pod, status: Pod['status']): Promise<void> {
+  if (!pod.tuya_enabled || !pod.id) return;
+
+  let action: 'on' | 'off' | null = null;
+  if (shouldPowerOn(status)) action = 'on';
+  if (shouldPowerOff(status)) action = 'off';
+  if (!action) return;
+
+  const response = await fetch(`${TUYA_GATEWAY_BASE_URL}/api/pods/${pod.id}/${action}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Gateway ${action} failed (${response.status}): ${body}`);
+  }
+}
+
 interface AuthState {
   user: User | null;
   isLoading: boolean;
@@ -112,7 +141,7 @@ interface PodState {
   fetchConsoles: () => Promise<void>;
   fetchSessions: () => Promise<void>;
   fetchCanvasSettings: () => Promise<void>;
-  createPod: (pod: Omit<Pod, 'id' | 'created_at' | 'current_session_id'>) => Promise<void>;
+  createPod: (pod: Omit<Pod, 'id' | 'created_at' | 'current_session_id'>) => Promise<Pod>;
   updatePod: (podId: string, updates: Partial<Pod>) => Promise<void>;
   updatePodPosition: (podId: string, x: number, y: number) => Promise<void>;
   updatePodSize: (podId: string, width: number, height: number) => Promise<void>;
@@ -227,6 +256,9 @@ export const usePodStore = create<PodState>()((set) => ({
 
   updatePod: async (podId: string, updates: Partial<Pod>) => {
     try {
+      const currentPod = usePodStore.getState().pods.find((pod) => pod.id === podId);
+      const nextPod = currentPod ? { ...currentPod, ...updates } : null;
+
       const { error } = await supabase
         .from('pods')
         .update(updates)
@@ -240,6 +272,14 @@ export const usePodStore = create<PodState>()((set) => ({
           pod.id === podId ? { ...pod, ...updates } : pod
         )
       }));
+
+      if (nextPod && updates.status) {
+        syncPodPowerForStatus(nextPod, updates.status).catch((powerError) => {
+          set({
+            error: powerError instanceof Error ? powerError.message : 'Failed to sync pod power state'
+          });
+        });
+      }
     } catch (error) {
       set({ 
         error: error instanceof Error ? error.message : 'Failed to update pod' 
@@ -354,6 +394,7 @@ export const usePodStore = create<PodState>()((set) => ({
       set((state) => ({
         pods: [...state.pods, data as Pod]
       }));
+      return data as Pod;
     } catch (error) {
       set({ 
         error: error instanceof Error ? error.message : 'Failed to create pod'
@@ -463,6 +504,15 @@ export const usePodStore = create<PodState>()((set) => ({
         .eq('id', podId);
 
       if (podError) throw podError;
+
+      const pod = usePodStore.getState().pods.find((p) => p.id === podId);
+      if (pod) {
+        syncPodPowerForStatus({ ...pod, status: 'available' }, 'available').catch((powerError) => {
+          set({
+            error: powerError instanceof Error ? powerError.message : 'Failed to sync pod power state'
+          });
+        });
+      }
       
       set((state) => ({
         sessions: state.sessions.map(s => 
@@ -558,6 +608,15 @@ export const usePodStore = create<PodState>()((set) => ({
         .eq('id', podId);
 
       if (podError) throw podError;
+
+      const latestPod = usePodStore.getState().pods.find((p) => p.id === podId);
+      if (latestPod) {
+        syncPodPowerForStatus({ ...latestPod, status: 'available' }, 'available').catch((powerError) => {
+          set({
+            error: powerError instanceof Error ? powerError.message : 'Failed to sync pod power state'
+          });
+        });
+      }
       
       set((state) => ({
         sessions: state.sessions.map(s => 

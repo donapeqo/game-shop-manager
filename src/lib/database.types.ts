@@ -64,6 +64,14 @@ export interface Database {
           console_id: string | null
           status: 'available' | 'occupied' | 'payment_pending' | 'maintenance'
           current_session_id: string | null
+          canvas_x: number
+          canvas_y: number
+          canvas_width: number
+          canvas_height: number
+          tuya_enabled: boolean
+          tuya_device_id: string | null
+          tuya_ip_address: string | null
+          tuya_protocol_version: string | null
           created_at: string
         }
         Insert: {
@@ -74,6 +82,14 @@ export interface Database {
           console_id?: string | null
           status?: 'available' | 'occupied' | 'payment_pending' | 'maintenance'
           current_session_id?: string | null
+          canvas_x?: number
+          canvas_y?: number
+          canvas_width?: number
+          canvas_height?: number
+          tuya_enabled?: boolean
+          tuya_device_id?: string | null
+          tuya_ip_address?: string | null
+          tuya_protocol_version?: string | null
           created_at?: string
         }
         Update: {
@@ -84,6 +100,14 @@ export interface Database {
           console_id?: string | null
           status?: 'available' | 'occupied' | 'payment_pending' | 'maintenance'
           current_session_id?: string | null
+          canvas_x?: number
+          canvas_y?: number
+          canvas_width?: number
+          canvas_height?: number
+          tuya_enabled?: boolean
+          tuya_device_id?: string | null
+          tuya_ip_address?: string | null
+          tuya_protocol_version?: string | null
           created_at?: string
         }
       }

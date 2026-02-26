@@ -25,6 +25,11 @@ export interface Pod {
   canvas_y: number;
   canvas_width: number;
   canvas_height: number;
+  // Optional Tuya local control fields
+  tuya_enabled?: boolean;
+  tuya_device_id?: string | null;
+  tuya_ip_address?: string | null;
+  tuya_protocol_version?: string | null;
 }
 
 export type ViewMode = 'grid' | 'list';

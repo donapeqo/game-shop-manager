@@ -21,6 +21,13 @@ dist-ssr/
 .env
 .env.local
 .env.*.local
+tools/tuya_local_webapp/pods.json
+
+# TinyTuya / local discovery artifacts
+tinytuya.json
+devices.json
+snapshot.json
+tuya-raw.json
 
 # Editor directories and files
 .vscode/*

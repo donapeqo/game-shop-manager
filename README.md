@@ -65,6 +65,9 @@ npm install
     # Adds: background_image, canvas_width, canvas_height fields
     # Inserts: default canvas settings
     # Enables: RLS policies for canvas_settings
+
+    # 4. Tuya Pod Fields (004_add_tuya_fields_to_pods.sql)
+    # Adds: tuya_enabled, tuya_device_id, tuya_ip_address, tuya_protocol_version to pods table
     ```
 3. Go to Project Settings → API and copy:
     - Project URL
@@ -128,6 +131,59 @@ npm run dev
 ```
 
 Open http://localhost:5173 and log in with your admin credentials.
+
+## Local Tuya Setup (Mac Gateway)
+
+Use this if you want pod sessions to control smart plugs locally.
+
+### 1. Run the local gateway
+
+```bash
+cd tools/tuya_local_webapp
+python3 -m pip install --upgrade tinytuya
+export TUYA_DEVICE_ID="REPLACE_WITH_DEVICE_ID"
+export TUYA_IP="REPLACE_WITH_DEVICE_IP"
+export TUYA_LOCAL_KEY="REPLACE_WITH_LOCAL_KEY"
+export TUYA_VERSION="3.5"
+python3 app.py
+```
+
+Gateway URL: `http://127.0.0.1:8787`
+
+### 2. Run the app and open Pods page
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+### 3. Register pods to plugs
+
+In Add/Edit Pod form:
+- Enable `Local Tuya Smart Plug`
+- Either:
+- Pick `Use Existing Registered Plug` (fast clone), or
+- Enter `Device ID`, `IP`, `Protocol`, and `Local Key` for manual registration
+
+After save:
+- Start session -> plug turns on
+- End/cancel session -> plug turns off
+- Plug live status appears in pod list/canvas
+
+### 4. Security rules (important)
+
+- Never commit real `TUYA_LOCAL_KEY` values.
+- `tools/tuya_local_webapp/pods.json` is git-ignored because it contains local keys.
+- TinyTuya dump files (`tinytuya.json`, `devices.json`, `snapshot.json`, `tuya-raw.json`) are git-ignored.
+- Keep secrets only in local env vars / local machine config.
+
+### 5. Pre-push safety check
+
+```bash
+git status --short
+git diff -- .env .env.local tools/tuya_local_webapp/pods.json tinytuya.json devices.json snapshot.json tuya-raw.json
+```
+
+These should show no secrets staged for commit.
 
 ## Usage Guide
 

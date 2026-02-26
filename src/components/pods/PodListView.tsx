@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Pod, Console, Session, SortField, SortDirection } from '@/types';
 import { SessionTimer } from '@/components/sessions/SessionTimer';
 import { ExtendSessionModal } from '@/components/sessions/ExtendSessionModal';
@@ -20,6 +20,9 @@ import {
   Settings
 } from 'lucide-react';
 import { usePodStore } from '@/store/useStore';
+
+const TUYA_GATEWAY_BASE_URL = (import.meta.env.VITE_TUYA_GATEWAY_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
+type PlugState = 'on' | 'off' | 'offline' | 'loading';
 
 interface PodListViewProps {
   pods: Pod[];
@@ -62,6 +65,63 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [extendSession, setExtendSession] = useState<Session | null>(null);
+  const [plugStates, setPlugStates] = useState<Record<string, PlugState>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchPlugStates = async () => {
+      const tuyaPods = pods.filter((pod) => pod.tuya_enabled);
+      if (tuyaPods.length === 0) {
+        if (!cancelled) setPlugStates({});
+        return;
+      }
+
+      if (!cancelled) {
+        setPlugStates((prev) => {
+          const next = { ...prev };
+          tuyaPods.forEach((pod) => {
+            if (!next[pod.id]) next[pod.id] = 'loading';
+          });
+          return next;
+        });
+      }
+
+      const results = await Promise.all(
+        tuyaPods.map(async (pod) => {
+          try {
+            const response = await fetch(`${TUYA_GATEWAY_BASE_URL}/api/pods/${pod.id}/status`);
+            if (!response.ok) return [pod.id, 'offline'] as const;
+            const payload = await response.json();
+            const dps = payload?.data?.dps ?? {};
+            const switchOne = dps['1'] ?? dps[1];
+            if (switchOne === true) return [pod.id, 'on'] as const;
+            if (switchOne === false) return [pod.id, 'off'] as const;
+            return [pod.id, 'offline'] as const;
+          } catch {
+            return [pod.id, 'offline'] as const;
+          }
+        })
+      );
+
+      if (!cancelled) {
+        setPlugStates((prev) => {
+          const next = { ...prev };
+          results.forEach(([podId, state]) => {
+            next[podId] = state;
+          });
+          return next;
+        });
+      }
+    };
+
+    fetchPlugStates();
+    const interval = setInterval(fetchPlugStates, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [pods]);
 
   const getPodConsole = (pod: Pod) => {
     return consoles.find(c => c.id === pod.console_id);
@@ -181,6 +241,24 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
     }
   };
 
+  const getPlugBadge = (pod: Pod) => {
+    if (!pod.tuya_enabled) return <span className="text-gray-500">-</span>;
+    const state = plugStates[pod.id] ?? 'loading';
+    const color =
+      state === 'on'
+        ? 'text-green-400 bg-green-500/10 border-green-500/20'
+        : state === 'off'
+          ? 'text-gray-300 bg-gray-500/10 border-gray-500/20'
+          : state === 'loading'
+            ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'
+            : 'text-red-400 bg-red-500/10 border-red-500/20';
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}>
+        plug {state}
+      </span>
+    );
+  };
+
   return (
     <div className="bg-[#1a1a24] rounded-xl border border-gray-800 overflow-hidden">
       {/* Filters */}
@@ -222,6 +300,7 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
               <SortHeader field="name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Pod Name</SortHeader>
               <SortHeader field="console" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Console</SortHeader>
               <SortHeader field="status" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Status</SortHeader>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Plug</th>
               <SortHeader field="customer" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Customer</SortHeader>
               <SortHeader field="timeLeft" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Time Left</SortHeader>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
@@ -254,6 +333,9 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(pod.status)}`}>
                       {pod.status.replace('_', ' ')}
                     </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    {getPlugBadge(pod)}
                   </td>
                   <td className="px-4 py-4">
                     <span className="text-gray-300">
