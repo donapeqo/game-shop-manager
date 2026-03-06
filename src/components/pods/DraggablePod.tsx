@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Pod, Console, Session } from '@/types';
 import { SessionTimer } from '@/components/sessions/SessionTimer';
 import { ExtendSessionModal } from '@/components/sessions/ExtendSessionModal';
@@ -13,8 +13,7 @@ import {
   Timer,
   Pause,
   X,
-  Maximize2,
-  Minimize2
+  MoveDiagonal2
 } from 'lucide-react';
 import { usePodStore } from '@/store/useStore';
 
@@ -32,11 +31,10 @@ interface DraggablePodProps {
   showControls?: boolean;
 }
 
-const SIZE_PRESETS = {
-  small: { width: 160, height: 120 },
-  medium: { width: 200, height: 150 },
-  large: { width: 240, height: 180 },
-};
+const CANVAS_WIDTH = 1200;
+const CANVAS_HEIGHT = 800;
+const MIN_WIDTH = 140;
+const MIN_HEIGHT = 100;
 
 export function DraggablePod({
   pod,
@@ -56,6 +54,14 @@ export function DraggablePod({
   const [showActions, setShowActions] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [currentPos, setCurrentPos] = useState({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStart, setResizeStart] = useState({
+    mouseX: 0,
+    mouseY: 0,
+    width: 0,
+    height: 0,
+  });
+  const [currentSize, setCurrentSize] = useState({ width: 0, height: 0 });
   const [extendSession, setExtendSession] = useState<Session | null>(null);
   const podRef = useRef<HTMLDivElement>(null);
 
@@ -64,6 +70,10 @@ export function DraggablePod({
   const positionY = pod.canvas_y ?? 50;
   const width = pod.canvas_width ?? 200;
   const height = pod.canvas_height ?? 150;
+
+  useEffect(() => {
+    setCurrentSize({ width, height });
+  }, [width, height]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -104,10 +114,20 @@ export function DraggablePod({
     }
   };
 
-  const handleResize = useCallback((size: 'small' | 'medium' | 'large') => {
-    const { width, height } = SIZE_PRESETS[size];
-    onResize(width, height);
-  }, [onResize]);
+  const handleResizeMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    setIsResizing(true);
+    setResizeStart({
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      width,
+      height,
+    });
+    setCurrentSize({ width, height });
+  };
 
   // Custom mouse drag implementation
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -133,7 +153,7 @@ export function DraggablePod({
   };
 
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isDragging || isResizing) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       const canvasRect = canvasRef.current?.getBoundingClientRect();
@@ -144,8 +164,8 @@ export function DraggablePod({
       let newY = e.clientY - canvasRect.top - dragOffset.y;
       
       // Ensure pod stays within canvas bounds
-      newX = Math.max(0, Math.min(newX, 1200 - width));
-      newY = Math.max(0, Math.min(newY, 800 - height));
+      newX = Math.max(0, Math.min(newX, CANVAS_WIDTH - width));
+      newY = Math.max(0, Math.min(newY, CANVAS_HEIGHT - height));
       
       // Update current position in real-time (follows pointer)
       setCurrentPos({ x: newX, y: newY });
@@ -162,8 +182,8 @@ export function DraggablePod({
       let newY = e.clientY - canvasRect.top - dragOffset.y;
       
       // Ensure pod stays within canvas bounds
-      newX = Math.max(0, Math.min(newX, 1200 - width));
-      newY = Math.max(0, Math.min(newY, 800 - height));
+      newX = Math.max(0, Math.min(newX, CANVAS_WIDTH - width));
+      newY = Math.max(0, Math.min(newY, CANVAS_HEIGHT - height));
       
       // Save final position
       onPositionChange(newX, newY);
@@ -177,7 +197,37 @@ export function DraggablePod({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, canvasRef, width, height, onPositionChange]);
+  }, [isDragging, isResizing, dragOffset, canvasRef, width, height, onPositionChange]);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - resizeStart.mouseX;
+      const deltaY = e.clientY - resizeStart.mouseY;
+
+      const maxWidth = CANVAS_WIDTH - positionX;
+      const maxHeight = CANVAS_HEIGHT - positionY;
+
+      const newWidth = Math.max(MIN_WIDTH, Math.min(resizeStart.width + deltaX, maxWidth));
+      const newHeight = Math.max(MIN_HEIGHT, Math.min(resizeStart.height + deltaY, maxHeight));
+
+      setCurrentSize({ width: newWidth, height: newHeight });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      onResize(currentSize.width, currentSize.height);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, resizeStart, positionX, positionY, currentSize.width, currentSize.height, onResize]);
 
   return (
     <div
@@ -192,10 +242,10 @@ export function DraggablePod({
       style={{
         left: isDragging ? currentPos.x : positionX,
         top: isDragging ? currentPos.y : positionY,
-        width: width,
-        height: height,
+        width: isResizing ? currentSize.width : width,
+        height: isResizing ? currentSize.height : height,
         transform: isDragging ? 'scale(1.05)' : 'scale(1)',
-        transition: isDragging ? 'none' : 'transform 0.15s ease-out, box-shadow 0.15s ease-out',
+        transition: isDragging || isResizing ? 'none' : 'transform 0.15s ease-out, box-shadow 0.15s ease-out',
       }}
     >
       {/* Header */}
@@ -323,41 +373,20 @@ export function DraggablePod({
         </div>
       )}
 
-      {/* Resize Controls */}
+      {/* Resize Handle */}
       {showControls && showActions && (
-        <div className="absolute -bottom-8 left-0 flex items-center gap-1 bg-[#1a1a24] border border-gray-800 rounded-lg p-1 shadow-lg"
+        <button
+          onMouseDown={handleResizeMouseDown}
+          className={`absolute -bottom-2 -right-2 p-1.5 rounded-md border shadow-lg transition-colors ${
+            isResizing
+              ? 'bg-cyan-500 text-white border-cyan-400'
+              : 'bg-[#1a1a24] text-gray-300 border-gray-700 hover:text-white hover:border-gray-500'
+          }`}
+          title="Drag to resize"
+          aria-label="Drag to resize pod"
         >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleResize('small');
-            }}
-            className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
-            title="Small"
-          >
-            <Minimize2 className="w-3 h-3" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleResize('medium');
-            }}
-            className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
-            title="Medium"
-          >
-            <Maximize2 className="w-3 h-3" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleResize('large');
-            }}
-            className="p-1 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
-            title="Large"
-          >
-            <Maximize2 className="w-4 h-4" />
-          </button>
-        </div>
+          <MoveDiagonal2 className="w-3 h-3" />
+        </button>
       )}
 
       {/* Status Badge */}

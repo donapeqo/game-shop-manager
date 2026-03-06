@@ -66,7 +66,7 @@ export const useAuthStore = create<AuthState>()(
             .from('users')
             .select('*')
             .eq('id', authData.user.id)
-            .single();
+            .maybeSingle();
 
           if (userError) throw userError;
           if (!userData) throw new Error('User not found in database');
@@ -103,7 +103,7 @@ export const useAuthStore = create<AuthState>()(
               .from('users')
               .select('*')
               .eq('id', session.user.id)
-              .single();
+              .maybeSingle();
 
             if (!userError && userData) {
               set({ user: userData as User, isLoading: false });
