@@ -382,7 +382,12 @@ export const usePodStore = create<PodState>()((set) => ({
         .eq('id', session.pod_id);
 
       set((state) => ({
-        sessions: [data as Session, ...state.sessions]
+        sessions: [data as Session, ...state.sessions],
+        pods: state.pods.map((pod) =>
+          pod.id === session.pod_id
+            ? { ...pod, status: 'payment_pending', current_session_id: data.id }
+            : pod
+        )
       }));
     } catch (error) {
       set({ 

@@ -131,8 +131,7 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
     if (cfg.version) setTuyaProtocolVersion(String(cfg.version));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError('');
     
     const validationError = validateForm();
@@ -228,7 +227,7 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="p-6 space-y-6">
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
               <p className="text-red-400 text-sm">{error}</p>
@@ -390,7 +389,10 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={() => {
+                void handleSubmit();
+              }}
               disabled={isLoading || !name.trim() || !consoleId}
               className="flex-1 px-4 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-200 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
@@ -404,7 +406,7 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
               )}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

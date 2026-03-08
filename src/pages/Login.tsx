@@ -20,8 +20,7 @@ export function LoginPage() {
     }
   }, [user, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     clearError();
     await login(email, password);
   };
@@ -45,7 +44,7 @@ export function LoginPage() {
 
         {/* Login Form */}
         <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 p-6 shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
                 Email
@@ -73,6 +72,11 @@ export function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      void handleSubmit();
+                    }
+                  }}
                   className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-3 pl-10 pr-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors"
                   placeholder="Enter your password"
                   required
@@ -87,7 +91,10 @@ export function LoginPage() {
             )}
 
             <button
-              type="submit"
+              type="button"
+              onClick={() => {
+                void handleSubmit();
+              }}
               disabled={isLoading}
               className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
@@ -100,7 +107,7 @@ export function LoginPage() {
                 'Sign In'
               )}
             </button>
-          </form>
+          </div>
         </div>
 
       </div>

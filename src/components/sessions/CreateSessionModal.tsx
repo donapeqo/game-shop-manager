@@ -73,14 +73,7 @@ export function CreateSessionModal({ pod, console, onClose, onSuccess }: CreateS
         </div>
 
         {/* Form */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            void handleCreateSession();
-          }}
-          className="p-6 space-y-6"
-        >
+        <div className="p-6 space-y-6">
           {/* Phone Number */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
@@ -112,7 +105,7 @@ export function CreateSessionModal({ pod, console, onClose, onSuccess }: CreateS
                   onClick={() => handleDurationChange(mins)}
                   className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                     duration === mins
-                      ? 'text-white'
+                      ? 'bg-cyan-500/20 border border-cyan-400 text-cyan-700 dark:text-cyan-100'
                       : 'bg-slate-50 dark:bg-[#0a0a0f] text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-gray-700'
                   }`}
                 >
@@ -161,7 +154,9 @@ export function CreateSessionModal({ pod, console, onClose, onSuccess }: CreateS
             </button>
             <button
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 void handleCreateSession();
               }}
               disabled={isLoading || !phoneNumber}
@@ -170,7 +165,7 @@ export function CreateSessionModal({ pod, console, onClose, onSuccess }: CreateS
               {isLoading ? 'Creating...' : 'Create Session'}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

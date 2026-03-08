@@ -36,8 +36,7 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError('');
 
     const payment = parseFloat(additionalPayment);
@@ -80,7 +79,7 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="p-6 space-y-6">
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
               <p className="text-red-400 text-sm">{error}</p>
@@ -175,7 +174,10 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={() => {
+                void handleSubmit();
+              }}
               disabled={isLoading || !additionalPayment}
               className="flex-1 px-4 py-3 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-200 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
@@ -189,7 +191,7 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
               )}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
