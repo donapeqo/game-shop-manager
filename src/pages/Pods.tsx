@@ -1,20 +1,57 @@
-import { useState, useEffect } from 'react';
-import { PodGrid } from '@/components/pods/PodGrid';
+import { useState, useEffect, useCallback } from 'react';
 import { PodFormModal } from '@/components/pods/PodFormModal';
+import { CanvasView } from '@/components/pods/CanvasView';
+import { PodListView } from '@/components/pods/PodListView';
+import { ViewToggle } from '@/components/pods/ViewToggle';
+import { CreateSessionModal } from '@/components/sessions/CreateSessionModal';
+import { PaymentModal } from '@/components/sessions/PaymentModal';
 import { usePodStore } from '@/store/useStore';
-import { Loader2, Plus, Settings } from 'lucide-react';
-import type { Pod } from '@/types';
+import { Loader2, Plus } from 'lucide-react';
+import type { Pod, ViewMode, Session } from '@/types';
 
 export function PodsPage() {
-  const { pods, consoles, sessions, isLoading, fetchPods, fetchConsoles, fetchSessions } = usePodStore();
+  const { 
+    pods, 
+    consoles, 
+    sessions, 
+    canvasSettings,
+    isLoading, 
+    fetchPods, 
+    fetchConsoles, 
+    fetchSessions,
+    fetchCanvasSettings,
+    updatePodPosition, 
+    updatePodSize,
+    updateCanvasBackground
+  } = usePodStore();
+  
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
+  const [selectedPod, setSelectedPod] = useState<Pod | null>(null);
+  const [paymentSession, setPaymentSession] = useState<Session | null>(null);
+
+  // Load saved view preference
+  useEffect(() => {
+    const savedView = localStorage.getItem('pods-view-mode') as ViewMode;
+    if (savedView && (savedView === 'grid' || savedView === 'list')) {
+      requestAnimationFrame(() => {
+        setViewMode(savedView);
+      });
+    }
+  }, []);
+
+  // Save view preference
+  useEffect(() => {
+    localStorage.setItem('pods-view-mode', viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     fetchPods();
     fetchConsoles();
     fetchSessions();
-  }, [fetchPods, fetchConsoles, fetchSessions]);
+    fetchCanvasSettings();
+  }, [fetchPods, fetchConsoles, fetchSessions, fetchCanvasSettings]);
 
   const handleAddPod = () => {
     setEditingPod(null);
@@ -26,6 +63,22 @@ export function PodsPage() {
     setIsModalOpen(true);
   };
 
+  const handlePodPositionChange = useCallback(async (podId: string, x: number, y: number) => {
+    await updatePodPosition(podId, x, y);
+  }, [updatePodPosition]);
+
+  const handlePodResize = useCallback(async (podId: string, width: number, height: number) => {
+    await updatePodSize(podId, width, height);
+  }, [updatePodSize]);
+
+  const handleBackgroundUpload = useCallback(async (base64Image: string) => {
+    await updateCanvasBackground(base64Image);
+  }, [updateCanvasBackground]);
+
+  const handleBackgroundRemove = useCallback(async () => {
+    await updateCanvasBackground(null);
+  }, [updateCanvasBackground]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -36,37 +89,53 @@ export function PodsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Pod Management</h1>
-          <p className="text-gray-400">Manage gaming pod layout and assignments</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">Pod Management</h1>
+          <p className="text-slate-600 dark:text-gray-400">Manage gaming pod layout and assignments</p>
         </div>
-        <button
-          onClick={handleAddPod}
-          className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-lg transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add Pod
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
+          <button type="button"
+            onClick={handleAddPod}
+            className="justify-center flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-lg transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Add Pod
+          </button>
+        </div>
       </div>
 
-      <div className="bg-[#1a1a24] rounded-xl border border-gray-800 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Grid Layout</h2>
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <Settings className="w-4 h-4" />
-            <span>Click on a pod to edit</span>
-          </div>
-        </div>
-        <PodGrid 
-          pods={pods} 
-          consoles={consoles} 
-          sessions={sessions} 
-          showControls 
-          onEditPod={handleEditPod}
+      {/* Content */}
+      {viewMode === 'grid' ? (
+        <CanvasView
+          pods={pods}
+          consoles={consoles}
+          sessions={sessions}
+          canvasSettings={canvasSettings}
+          onPodPositionChange={handlePodPositionChange}
+          onPodResize={handlePodResize}
+          onPodEdit={handleEditPod}
+          onCreateSession={setSelectedPod}
+          onPayment={setPaymentSession}
+          onBackgroundUpload={handleBackgroundUpload}
+          onBackgroundRemove={handleBackgroundRemove}
+          showControls
         />
-      </div>
+      ) : (
+        <PodListView
+          pods={pods}
+          consoles={consoles}
+          sessions={sessions}
+          onEditPod={handleEditPod}
+          onCreateSession={setSelectedPod}
+          onPayment={setPaymentSession}
+          showControls
+        />
+      )}
 
+      {/* Pod Form Modal */}
       {isModalOpen && (
         <PodFormModal
           pod={editingPod}
@@ -75,6 +144,33 @@ export function PodsPage() {
           onClose={() => setIsModalOpen(false)}
           onSuccess={() => {
             fetchPods();
+          }}
+        />
+      )}
+
+      {/* Create Session Modal */}
+      {selectedPod && (
+        <CreateSessionModal
+          pod={selectedPod}
+          console={consoles.find(c => c.id === selectedPod.console_id)!}
+          onClose={() => setSelectedPod(null)}
+          onSuccess={() => {
+            fetchSessions();
+            fetchPods();
+            setSelectedPod(null);
+          }}
+        />
+      )}
+
+      {/* Payment Modal */}
+      {paymentSession && (
+        <PaymentModal
+          session={paymentSession}
+          onClose={() => setPaymentSession(null)}
+          onSuccess={() => {
+            fetchSessions();
+            fetchPods();
+            setPaymentSession(null);
           }}
         />
       )}

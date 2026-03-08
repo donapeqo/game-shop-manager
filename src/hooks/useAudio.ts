@@ -1,5 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react';
 
+type WindowWithWebkitAudio = Window & {
+  webkitAudioContext?: typeof AudioContext;
+};
+
 export function useAudio() {
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -7,7 +11,11 @@ export function useAudio() {
     // Initialize audio context on first user interaction
     const initAudio = () => {
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContextCtor =
+          window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext;
+
+        if (!AudioContextCtor) return;
+        audioContextRef.current = new AudioContextCtor();
       }
     };
 

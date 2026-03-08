@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tuya Smart Plug Control</title>
+    <style>
+      :root {
+        --bg: #09090b;
+        --fg: #fafafa;
+        --card: #111113;
+        --muted: #a1a1aa;
+        --border: #27272a;
+        --ring: #d4d4d8;
+        --btn: #fafafa;
+        --btn-fg: #09090b;
+        --btn-subtle: #18181b;
+      }
+      body {
+        font-family: "Geist", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #18181b 0%, var(--bg) 55%);
+        color: var(--fg);
+        margin: 0;
+        padding: 24px;
+      }
+      .card {
+        max-width: 640px;
+        margin: 0 auto;
+        background: color-mix(in srgb, var(--card) 92%, black 8%);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 1.5rem;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 12px 0;
+      }
+      button {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 120ms ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 1px;
+      }
+      .on { background: var(--btn); color: var(--btn-fg); }
+      .off { background: var(--btn-subtle); color: var(--fg); }
+      .neutral { background: transparent; color: var(--fg); }
+      input, select {
+        border: 1px solid var(--border);
+        background: #09090b;
+        color: var(--fg);
+        border-radius: 8px;
+        padding: 8px;
+      }
+      .status {
+        margin: 10px 0;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+      pre {
+        background: #09090b;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        overflow: auto;
+        font-size: 0.82rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Tuya Smart Plug Control</h1>
+      <div class="row">
+        <button class="on" id="btnOn">Turn On</button>
+        <button class="off" id="btnOff">Turn Off</button>
+        <button class="neutral" id="btnRefresh">Refresh Status</button>
+      </div>
+
+      <div class="row">
+        <input id="timerSeconds" type="number" min="1" value="300" />
+        <select id="timerAction">
+          <option value="off">After timer: OFF</option>
+          <option value="on">After timer: ON</option>
+        </select>
+        <button class="neutral" id="btnStartTimer">Start Timer</button>
+        <button class="neutral" id="btnCancelTimer">Cancel Timer</button>
+      </div>
+
+      <div class="status" id="timerStatus">Timer: none</div>
+      <div class="status" id="statusText">Status: unknown</div>
+      <pre id="rawOutput">{}</pre>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const statusText = $("statusText");
+      const timerStatus = $("timerStatus");
+      const rawOutput = $("rawOutput");
+
+      async function call(url, method = "GET", body) {
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : undefined
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || "Request failed");
+        }
+        return data.data;
+      }
+
+      function renderStatus(data) {
+        const list = data?.dps || {};
+        const maybeOn = list["1"];
+        statusText.textContent = `Status: ${maybeOn === true ? "ON" : maybeOn === false ? "OFF" : "unknown"}`;
+        rawOutput.textContent = JSON.stringify(data, null, 2);
+      }
+
+      function renderTimer(data) {
+        if (!data.active) {
+          timerStatus.textContent = "Timer: none";
+          return;
+        }
+        timerStatus.textContent = `Timer: ${data.seconds_remaining}s -> ${data.action.toUpperCase()}`;
+      }
+
+      async function refreshAll() {
+        try {
+          const [status, timer] = await Promise.all([
+            call("/api/status"),
+            call("/api/timer")
+          ]);
+          renderStatus(status);
+          renderTimer(timer);
+        } catch (err) {
+          statusText.textContent = `Error: ${err.message}`;
+        }
+      }
+
+      $("btnOn").onclick = async () => {
+        await call("/api/on", "POST");
+        await refreshAll();
+      };
+      $("btnOff").onclick = async () => {
+        await call("/api/off", "POST");
+        await refreshAll();
+      };
+      $("btnRefresh").onclick = refreshAll;
+      $("btnStartTimer").onclick = async () => {
+        const seconds = Number($("timerSeconds").value || 0);
+        const action = $("timerAction").value;
+        await call("/api/timer", "POST", { seconds, action });
+        await refreshAll();
+      };
+      $("btnCancelTimer").onclick = async () => {
+        await call("/api/timer/cancel", "POST");
+        await refreshAll();
+      };
+
+      refreshAll();
+      setInterval(refreshAll, 5000);
+    </script>
+  </body>
+</html>

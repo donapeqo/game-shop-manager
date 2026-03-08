@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Clock, DollarSign, Plus, Calendar } from 'lucide-react';
 import { usePodStore } from '@/store/useStore';
 import { useTimer } from '@/hooks/useTimer';
@@ -58,22 +59,22 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
     }
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1a1a24] rounded-xl border border-gray-800 w-full max-w-md overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-gray-800">
+      <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 w-full max-w-md overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-              <Plus className="w-5 h-5 text-white" />
+              <Plus className="w-5 h-5 text-slate-900 dark:text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white">Extend Session</h3>
-              <p className="text-sm text-gray-400">Add more time</p>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Extend Session</h3>
+              <p className="text-sm text-slate-600 dark:text-gray-400">Add more time</p>
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -87,14 +88,14 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
           )}
 
           {/* Current Status */}
-          <div className="bg-[#0a0a0f] rounded-lg p-4 space-y-3">
+          <div className="bg-slate-50 dark:bg-[#0a0a0f] rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-gray-400 text-sm">Current Time Remaining</span>
+              <span className="text-slate-600 dark:text-gray-400 text-sm">Current Time Remaining</span>
               <span className="text-cyan-400 font-mono font-bold">{formattedTime}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-gray-400 text-sm">Current End Time</span>
-              <span className="text-white text-sm">
+              <span className="text-slate-600 dark:text-gray-400 text-sm">Current End Time</span>
+              <span className="text-slate-900 dark:text-white text-sm">
                 {new Date(session.end_time).toLocaleString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -107,7 +108,7 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
 
           {/* Extension Duration */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-3">
               Extension Duration *
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -121,8 +122,8 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
                   }}
                   className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                     extensionMinutes === mins
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-[#0a0a0f] text-gray-400 hover:text-white border border-gray-700'
+                      ? 'text-white'
+                      : 'bg-slate-50 dark:bg-[#0a0a0f] text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-gray-700'
                   }`}
                 >
                   +{mins}m
@@ -133,23 +134,23 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
 
           {/* Additional Payment */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
               Additional Payment ($) *
             </label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 dark:text-gray-500" />
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={additionalPayment}
                 onChange={(e) => setAdditionalPayment(e.target.value)}
-                className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-3 pl-10 pr-4 text-slate-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
                 placeholder="0.00"
                 required
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-gray-500 mt-1">
               Suggested: ${suggestedPayment.toFixed(2)} for {extensionMinutes} minutes
             </p>
           </div>
@@ -160,7 +161,7 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
               <Calendar className="w-5 h-5 text-amber-400" />
               <div>
                 <p className="text-sm text-amber-400 font-medium">New End Time</p>
-                <p className="text-lg text-white font-bold">{calculateNewEndTime()}</p>
+                <p className="text-lg text-slate-900 dark:text-white font-bold">{calculateNewEndTime()}</p>
               </div>
             </div>
           </div>
@@ -169,14 +170,14 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 rounded-lg transition-colors"
+              className="flex-1 px-4 py-3 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-gray-700 hover:border-gray-600 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || !additionalPayment}
-              className="flex-1 px-4 py-3 bg-amber-500 hover:bg-amber-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-200 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>Processing...</>
@@ -192,4 +193,6 @@ export function ExtendSessionModal({ session, onClose, onSuccess }: ExtendSessio
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

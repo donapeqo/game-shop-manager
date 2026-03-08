@@ -28,7 +28,7 @@ interface PodGridProps {
 }
 
 export function PodGrid({ pods, consoles, sessions, showControls = false, onEditPod }: PodGridProps) {
-  const { updatePod, updateSession, cancelSession, completeSession } = usePodStore();
+  const { updatePod, updateSession, cancelSession, completeSession, fetchPods, fetchSessions } = usePodStore();
   const [selectedPod, setSelectedPod] = useState<Pod | null>(null);
   const [paymentSession, setPaymentSession] = useState<Session | null>(null);
   const [extendSession, setExtendSession] = useState<Session | null>(null);
@@ -60,7 +60,7 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
       case 'occupied': return 'border-cyan-500/50 bg-cyan-500/5';
       case 'payment_pending': return 'border-amber-500/50 bg-amber-500/5';
       case 'maintenance': return 'border-red-500/50 bg-red-500/5';
-      default: return 'border-gray-700 bg-gray-800/30';
+      default: return 'border-slate-300 dark:border-gray-700 bg-slate-100 dark:bg-gray-800/30';
     }
   };
 
@@ -115,12 +115,12 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(pod.status)}
-                      <span className="font-bold text-white text-lg">{pod.name}</span>
+                      <span className="font-bold text-slate-900 dark:text-white text-lg">{pod.name}</span>
                     </div>
                     {showControls && onEditPod && pod.status === 'available' && (
-                      <button 
+                      <button type="button" 
                         onClick={() => onEditPod(pod)}
-                        className="text-gray-400 hover:text-cyan-400 p-1 hover:bg-cyan-400/10 rounded transition-colors"
+                        className="text-slate-600 dark:text-gray-400 hover:text-cyan-400 p-1 hover:bg-cyan-400/10 rounded transition-colors"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
@@ -129,8 +129,8 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
 
                   {/* Console Info */}
                   <div className="flex items-center gap-2 mb-3">
-                    <Gamepad2 className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-300">
+                    <Gamepad2 className="w-4 h-4 text-slate-600 dark:text-gray-400" />
+                    <span className="text-sm text-slate-700 dark:text-gray-300">
                       {console ? console.name : 'No console assigned'}
                     </span>
                   </div>
@@ -138,7 +138,7 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
                   {/* Session Info */}
                   {session && (
                     <div className="space-y-2 mb-3">
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-slate-600 dark:text-gray-400">
                         Customer: {session.customer_phone}
                       </div>
                       {session.status === 'active' && (
@@ -155,7 +155,7 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
                   {showControls && (
                     <div className="flex flex-wrap gap-2 mt-3">
                       {pod.status === 'available' && console && (
-                        <button
+                        <button type="button"
                           onClick={() => setSelectedPod(pod)}
                           className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-500 hover:bg-green-400 text-white text-sm rounded-lg transition-colors"
                         >
@@ -164,7 +164,7 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
                         </button>
                       )}
                       {session?.status === 'pending' && session?.payment_status === 'pending' && (
-                        <button
+                        <button type="button"
                           onClick={() => setPaymentSession(session)}
                           className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-white text-sm rounded-lg transition-colors"
                         >
@@ -173,7 +173,7 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
                         </button>
                       )}
                       {session?.status === 'pending' && session?.payment_status === 'paid' && (
-                        <button
+                        <button type="button"
                           onClick={() => handleStartSession(pod)}
                           className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-cyan-500 hover:bg-cyan-400 text-white text-sm rounded-lg transition-colors"
                         >
@@ -183,14 +183,14 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
                       )}
                       {session?.status === 'active' && (
                         <>
-                          <button
+                          <button type="button"
                             onClick={() => setExtendSession(session)}
                             className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-white text-sm rounded-lg transition-colors"
                           >
                             <Timer className="w-4 h-4" />
                             Extend
                           </button>
-                          <button
+                          <button type="button"
                             onClick={() => handleEndSession(pod)}
                             className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-red-500 hover:bg-red-400 text-white text-sm rounded-lg transition-colors"
                           >
@@ -200,9 +200,9 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
                         </>
                       )}
                       {(session?.status === 'pending' || session?.status === 'active') && (
-                        <button
+                        <button type="button"
                           onClick={() => handleCancelSession(pod)}
-                          className="px-3 py-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-gray-700 hover:border-red-500/30 rounded-lg transition-colors"
+                          className="px-3 py-2 text-slate-600 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-slate-300 dark:border-gray-700 hover:border-red-500/30 rounded-lg transition-colors"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -234,8 +234,9 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
           console={consoles.find(c => c.id === selectedPod.console_id)!}
           onClose={() => setSelectedPod(null)}
           onSuccess={() => {
-            // Refresh data after successful creation
-            window.location.reload();
+            fetchSessions();
+            fetchPods();
+            setSelectedPod(null);
           }}
         />
       )}
@@ -246,7 +247,9 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
           session={paymentSession}
           onClose={() => setPaymentSession(null)}
           onSuccess={() => {
-            window.location.reload();
+            fetchSessions();
+            fetchPods();
+            setPaymentSession(null);
           }}
         />
       )}
@@ -257,7 +260,9 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
           session={extendSession}
           onClose={() => setExtendSession(null)}
           onSuccess={() => {
-            window.location.reload();
+            fetchSessions();
+            fetchPods();
+            setExtendSession(null);
           }}
         />
       )}

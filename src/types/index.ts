@@ -20,6 +20,27 @@ export interface Pod {
   console_id: string | null;
   status: 'available' | 'occupied' | 'payment_pending' | 'maintenance';
   current_session_id: string | null;
+  // Canvas positioning fields
+  canvas_x: number;
+  canvas_y: number;
+  canvas_width: number;
+  canvas_height: number;
+  // Optional Tuya local control fields
+  tuya_enabled?: boolean;
+  tuya_device_id?: string | null;
+  tuya_ip_address?: string | null;
+  tuya_protocol_version?: string | null;
+}
+
+export type ViewMode = 'grid' | 'list';
+
+export type PodSizePreset = 'small' | 'medium' | 'large';
+
+export interface CanvasPosition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface Session {
@@ -52,3 +73,15 @@ export interface RentalHistory {
 
 export type PodStatus = 'available' | 'occupied' | 'payment_pending' | 'maintenance';
 export type SessionStatus = 'pending' | 'active' | 'completed' | 'cancelled';
+
+export type SortField = 'name' | 'console' | 'status' | 'customer' | 'timeLeft';
+export type SortDirection = 'asc' | 'desc';
+
+export interface CanvasSettings {
+  id: string;
+  background_image: string | null;
+  canvas_width: number;
+  canvas_height: number;
+  created_at: string;
+  updated_at: string;
+}

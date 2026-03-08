@@ -1,7 +1,36 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/lib/supabase';
-import type { User, Pod, Console, Session } from '@/types';
+import type { User, Pod, Console, Session, CanvasSettings } from '@/types';
+
+const TUYA_GATEWAY_BASE_URL = (import.meta.env.VITE_TUYA_GATEWAY_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
+
+function shouldPowerOn(status: Pod['status']): boolean {
+  return status === 'occupied';
+}
+
+function shouldPowerOff(status: Pod['status']): boolean {
+  return status === 'available' || status === 'maintenance';
+}
+
+async function syncPodPowerForStatus(pod: Pod, status: Pod['status']): Promise<void> {
+  if (!pod.tuya_enabled || !pod.id) return;
+
+  let action: 'on' | 'off' | null = null;
+  if (shouldPowerOn(status)) action = 'on';
+  if (shouldPowerOff(status)) action = 'off';
+  if (!action) return;
+
+  const response = await fetch(`${TUYA_GATEWAY_BASE_URL}/api/pods/${pod.id}/${action}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Gateway ${action} failed (${response.status}): ${body}`);
+  }
+}
 
 interface AuthState {
   user: User | null;
@@ -37,7 +66,7 @@ export const useAuthStore = create<AuthState>()(
             .from('users')
             .select('*')
             .eq('id', authData.user.id)
-            .single();
+            .maybeSingle();
 
           if (userError) throw userError;
           if (!userData) throw new Error('User not found in database');
@@ -74,7 +103,7 @@ export const useAuthStore = create<AuthState>()(
               .from('users')
               .select('*')
               .eq('id', session.user.id)
-              .single();
+              .maybeSingle();
 
             if (!userError && userData) {
               set({ user: userData as User, isLoading: false });
@@ -104,14 +133,18 @@ interface PodState {
   pods: Pod[];
   consoles: Console[];
   sessions: Session[];
+  canvasSettings: CanvasSettings | null;
   isLoading: boolean;
   error: string | null;
   
   fetchPods: () => Promise<void>;
   fetchConsoles: () => Promise<void>;
   fetchSessions: () => Promise<void>;
-  createPod: (pod: Omit<Pod, 'id' | 'created_at' | 'current_session_id'>) => Promise<void>;
+  fetchCanvasSettings: () => Promise<void>;
+  createPod: (pod: Omit<Pod, 'id' | 'created_at' | 'current_session_id'>) => Promise<Pod>;
   updatePod: (podId: string, updates: Partial<Pod>) => Promise<void>;
+  updatePodPosition: (podId: string, x: number, y: number) => Promise<void>;
+  updatePodSize: (podId: string, width: number, height: number) => Promise<void>;
   deletePod: (podId: string) => Promise<void>;
   createConsole: (console: Omit<Console, 'id' | 'created_at'>) => Promise<void>;
   updateConsole: (consoleId: string, updates: Partial<Console>) => Promise<void>;
@@ -121,6 +154,7 @@ interface PodState {
   cancelSession: (sessionId: string, podId: string) => Promise<void>;
   extendSession: (sessionId: string, additionalMinutes: number, additionalPayment: number) => Promise<void>;
   completeSession: (sessionId: string, podId: string) => Promise<void>;
+  updateCanvasBackground: (base64Image: string | null) => Promise<void>;
   subscribeToChanges: () => void;
 }
 
@@ -128,8 +162,77 @@ export const usePodStore = create<PodState>()((set) => ({
   pods: [],
   consoles: [],
   sessions: [],
+  canvasSettings: null,
   isLoading: false,
   error: null,
+
+  fetchCanvasSettings: async () => {
+    try {
+      let { data, error } = await supabase
+        .from('canvas_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        const insertResult = await supabase
+          .from('canvas_settings')
+          .insert({ background_image: null, canvas_width: 1200, canvas_height: 800 })
+          .select('*')
+          .single();
+
+        if (insertResult.error) throw insertResult.error;
+        data = insertResult.data;
+      }
+
+      set({ canvasSettings: data as CanvasSettings });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch canvas settings'
+      });
+    }
+  },
+
+  updateCanvasBackground: async (base64Image: string | null) => {
+    try {
+      let settings = usePodStore.getState().canvasSettings;
+      if (!settings) {
+        const { data, error } = await supabase
+          .from('canvas_settings')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        settings = (data as CanvasSettings | null) ?? null;
+      }
+
+      if (!settings) {
+        const insertResult = await supabase
+          .from('canvas_settings')
+          .insert({ background_image: null, canvas_width: 1200, canvas_height: 800 })
+          .select('*')
+          .single();
+        if (insertResult.error) throw insertResult.error;
+        settings = insertResult.data as CanvasSettings;
+      }
+
+      const { data: updated, error } = await supabase
+        .from('canvas_settings')
+        .update({ background_image: base64Image })
+        .eq('id', settings.id)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      set({ canvasSettings: updated as CanvasSettings });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to update canvas background'
+      });
+    }
+  },
 
   fetchPods: async () => {
     set({ isLoading: true });
@@ -184,6 +287,9 @@ export const usePodStore = create<PodState>()((set) => ({
 
   updatePod: async (podId: string, updates: Partial<Pod>) => {
     try {
+      const currentPod = usePodStore.getState().pods.find((pod) => pod.id === podId);
+      const nextPod = currentPod ? { ...currentPod, ...updates } : null;
+
       const { error } = await supabase
         .from('pods')
         .update(updates)
@@ -197,9 +303,61 @@ export const usePodStore = create<PodState>()((set) => ({
           pod.id === podId ? { ...pod, ...updates } : pod
         )
       }));
+
+      if (nextPod && updates.status) {
+        syncPodPowerForStatus(nextPod, updates.status).catch((powerError) => {
+          set({
+            error: powerError instanceof Error ? powerError.message : 'Failed to sync pod power state'
+          });
+        });
+      }
     } catch (error) {
       set({ 
         error: error instanceof Error ? error.message : 'Failed to update pod' 
+      });
+    }
+  },
+
+  updatePodPosition: async (podId: string, x: number, y: number) => {
+    try {
+      const { error } = await supabase
+        .from('pods')
+        .update({ canvas_x: x, canvas_y: y })
+        .eq('id', podId);
+
+      if (error) throw error;
+      
+      // Optimistic update
+      set((state) => ({
+        pods: state.pods.map(pod => 
+          pod.id === podId ? { ...pod, canvas_x: x, canvas_y: y } : pod
+        )
+      }));
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to update pod position' 
+      });
+    }
+  },
+
+  updatePodSize: async (podId: string, width: number, height: number) => {
+    try {
+      const { error } = await supabase
+        .from('pods')
+        .update({ canvas_width: width, canvas_height: height })
+        .eq('id', podId);
+
+      if (error) throw error;
+      
+      // Optimistic update
+      set((state) => ({
+        pods: state.pods.map(pod => 
+          pod.id === podId ? { ...pod, canvas_width: width, canvas_height: height } : pod
+        )
+      }));
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to update pod size' 
       });
     }
   },
@@ -267,6 +425,7 @@ export const usePodStore = create<PodState>()((set) => ({
       set((state) => ({
         pods: [...state.pods, data as Pod]
       }));
+      return data as Pod;
     } catch (error) {
       set({ 
         error: error instanceof Error ? error.message : 'Failed to create pod'
@@ -376,6 +535,15 @@ export const usePodStore = create<PodState>()((set) => ({
         .eq('id', podId);
 
       if (podError) throw podError;
+
+      const pod = usePodStore.getState().pods.find((p) => p.id === podId);
+      if (pod) {
+        syncPodPowerForStatus({ ...pod, status: 'available' }, 'available').catch((powerError) => {
+          set({
+            error: powerError instanceof Error ? powerError.message : 'Failed to sync pod power state'
+          });
+        });
+      }
       
       set((state) => ({
         sessions: state.sessions.map(s => 
@@ -471,6 +639,15 @@ export const usePodStore = create<PodState>()((set) => ({
         .eq('id', podId);
 
       if (podError) throw podError;
+
+      const latestPod = usePodStore.getState().pods.find((p) => p.id === podId);
+      if (latestPod) {
+        syncPodPowerForStatus({ ...latestPod, status: 'available' }, 'available').catch((powerError) => {
+          set({
+            error: powerError instanceof Error ? powerError.message : 'Failed to sync pod power state'
+          });
+        });
+      }
       
       set((state) => ({
         sessions: state.sessions.map(s => 
