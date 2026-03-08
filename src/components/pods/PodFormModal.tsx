@@ -205,24 +205,24 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1a1a24] rounded-xl border border-gray-800 w-full max-w-md overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-gray-800">
+      <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 w-full max-w-md overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-              <Grid3X3 className="w-5 h-5 text-white" />
+              <Grid3X3 className="w-5 h-5 text-slate-900 dark:text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
                 {isEditing ? 'Edit Pod' : 'Add New Pod'}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-slate-600 dark:text-gray-400">
                 {isEditing ? 'Update pod details' : 'Create a new gaming pod'}
               </p>
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -236,7 +236,7 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
               Pod Name *
             </label>
             <input
@@ -244,19 +244,19 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., VIP Station 1"
-              className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors"
+              className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-3 px-4 text-slate-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
               Assigned Console *
             </label>
             <select
               value={consoleId}
               onChange={(e) => setConsoleId(e.target.value)}
-              className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors"
+              className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-3 px-4 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors"
               required
             >
               <option value="">Select a console...</option>
@@ -273,13 +273,13 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
             )}
           </div>
 
-          <div className="border border-gray-800 rounded-lg p-4 space-y-4 bg-[#12121a]">
+          <div className="border border-slate-200 dark:border-gray-800 rounded-lg p-4 space-y-4 bg-white dark:bg-[#12121a]">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-semibold text-white">Local Tuya Smart Plug</h4>
-                <p className="text-xs text-gray-400">Enable pod power automation via local gateway</p>
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Local Tuya Smart Plug</h4>
+                <p className="text-xs text-slate-600 dark:text-gray-400">Enable pod power automation via local gateway</p>
               </div>
-              <label className="flex items-center gap-2 text-sm text-gray-300">
+              <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={tuyaEnabled}
@@ -299,13 +299,13 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
               <>
                 {Object.keys(existingGatewayConfigs).length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
                       Use Existing Registered Plug (optional)
                     </label>
                     <select
                       value={selectedExistingPodId}
                       onChange={(e) => applyExistingConfig(e.target.value)}
-                      className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-2.5 px-3 text-white focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-2.5 px-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
                     >
                       <option value="">Select existing pod config...</option>
                       {Object.entries(existingGatewayConfigs).map(([sourcePodId, cfg]) => (
@@ -314,46 +314,46 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-slate-500 dark:text-gray-500 mt-2">
                       Selecting one reuses gateway credentials; no local key re-entry required.
                     </p>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Device ID *</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Device ID *</label>
                   <input
                     type="text"
                     value={tuyaDeviceId}
                     onChange={(e) => setTuyaDeviceId(e.target.value)}
                     placeholder="e.g. a331aba7306ca3dfb6dvma"
-                    className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-2.5 px-3 text-slate-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">IP Address *</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">IP Address *</label>
                     <input
                       type="text"
                       value={tuyaIpAddress}
                       onChange={(e) => setTuyaIpAddress(e.target.value)}
                       placeholder="192.168.100.216"
-                      className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-2.5 px-3 text-slate-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Protocol *</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">Protocol *</label>
                     <input
                       type="text"
                       value={tuyaProtocolVersion}
                       onChange={(e) => setTuyaProtocolVersion(e.target.value)}
                       placeholder="3.5"
-                      className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-2.5 px-3 text-slate-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
                     Local Key {isEditing ? '(optional if using existing registered config)' : '(optional now, can add later)'}
                   </label>
                   <input
@@ -361,7 +361,7 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
                     value={tuyaLocalKey}
                     onChange={(e) => setTuyaLocalKey(e.target.value)}
                     placeholder="Paste local key to register with local gateway"
-                    className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-2.5 px-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-2.5 px-3 text-slate-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
                   />
                 </div>
               </>
@@ -385,14 +385,14 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 rounded-lg transition-colors"
+              className="flex-1 px-4 py-3 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-gray-700 hover:border-gray-600 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || !name.trim() || !consoleId}
-              className="flex-1 px-4 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-200 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>Processing...</>

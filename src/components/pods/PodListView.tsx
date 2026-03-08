@@ -45,7 +45,7 @@ interface SortHeaderProps {
 function SortHeader({ field, children, sortField, sortDirection, onSort }: SortHeaderProps) {
   return (
     <th
-      className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition-colors"
+      className="px-4 py-3 text-left text-xs font-medium text-slate-600 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors"
       onClick={() => onSort(field)}
     >
       <div className="flex items-center gap-1">
@@ -138,7 +138,7 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
       case 'occupied': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20';
       case 'payment_pending': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
       case 'maintenance': return 'text-red-400 bg-red-500/10 border-red-500/20';
-      default: return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
+      default: return 'text-slate-600 dark:text-gray-400 bg-slate-200/60 dark:bg-gray-500/10 border-slate-300 dark:border-gray-500/20';
     }
   };
 
@@ -242,13 +242,13 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
   };
 
   const getPlugBadge = (pod: Pod) => {
-    if (!pod.tuya_enabled) return <span className="text-gray-500">-</span>;
+    if (!pod.tuya_enabled) return <span className="text-slate-500 dark:text-gray-500">-</span>;
     const state = plugStates[pod.id] ?? 'loading';
     const color =
       state === 'on'
         ? 'text-green-400 bg-green-500/10 border-green-500/20'
         : state === 'off'
-          ? 'text-gray-300 bg-gray-500/10 border-gray-500/20'
+          ? 'text-slate-700 dark:text-gray-300 bg-slate-200/60 dark:bg-gray-500/10 border-slate-300 dark:border-gray-500/20'
           : state === 'loading'
             ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'
             : 'text-red-400 bg-red-500/10 border-red-500/20';
@@ -260,25 +260,25 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
   };
 
   return (
-    <div className="bg-[#1a1a24] rounded-xl border border-gray-800 overflow-hidden">
+    <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
       {/* Filters */}
-      <div className="p-4 border-b border-gray-800 flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+      <div className="p-4 border-b border-slate-200 dark:border-gray-800 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
+        <div className="relative flex-1 min-w-0 sm:min-w-[200px] w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search pods, consoles, customers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
+            className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2 text-slate-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-400" />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Filter className="w-4 h-4 text-slate-600 dark:text-gray-400" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-[#0a0a0f] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-500 transition-colors"
+            className="w-full sm:w-auto bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 transition-colors"
           >
             <option value="all">All Status</option>
             <option value="available">Available</option>
@@ -287,46 +287,46 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
             <option value="maintenance">Maintenance</option>
           </select>
         </div>
-        <div className="text-sm text-gray-400">
+        <div className="text-sm text-slate-600 dark:text-gray-400 sm:ml-auto">
           {filteredAndSortedPods.length} of {pods.length} pods
         </div>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-[#0a0a0f]">
+        <table className="w-full min-w-[900px]">
+          <thead className="bg-slate-50 dark:bg-[#0a0a0f]">
             <tr>
               <SortHeader field="name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Pod Name</SortHeader>
               <SortHeader field="console" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Console</SortHeader>
               <SortHeader field="status" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Status</SortHeader>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Plug</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 dark:text-gray-400 uppercase tracking-wider">Plug</th>
               <SortHeader field="customer" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Customer</SortHeader>
               <SortHeader field="timeLeft" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>Time Left</SortHeader>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 dark:text-gray-400 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-800">
+	          <tbody className="divide-y divide-slate-200 dark:divide-gray-800">
             {filteredAndSortedPods.map((pod) => {
               const console = getPodConsole(pod);
               const session = getPodSession(pod);
 
               return (
-                <tr 
-                  key={pod.id} 
-                  className="hover:bg-gray-800/30 transition-colors"
-                  onDoubleClick={() => onEditPod(pod)}
-                >
+	                <tr 
+	                  key={pod.id} 
+	                  className="hover:bg-slate-100 dark:hover:bg-gray-800/30 transition-colors"
+	                  onDoubleClick={() => onEditPod(pod)}
+	                >
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(pod.status)}
-                      <span className="font-medium text-white">{pod.name}</span>
+                      <span className="font-medium text-slate-900 dark:text-white">{pod.name}</span>
                     </div>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex items-center gap-2 text-gray-300">
-                      <Gamepad2 className="w-4 h-4 text-gray-500" />
-                      {console ? console.name : <span className="text-gray-500">No console</span>}
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-gray-300">
+                      <Gamepad2 className="w-4 h-4 text-slate-500 dark:text-gray-500" />
+                      {console ? console.name : <span className="text-slate-500 dark:text-gray-500">No console</span>}
                     </div>
                   </td>
                   <td className="px-4 py-4">
@@ -338,8 +338,8 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
                     {getPlugBadge(pod)}
                   </td>
                   <td className="px-4 py-4">
-                    <span className="text-gray-300">
-                      {session?.customer_phone || <span className="text-gray-500">-</span>}
+                    <span className="text-slate-700 dark:text-gray-300">
+                      {session?.customer_phone || <span className="text-slate-500 dark:text-gray-500">-</span>}
                     </span>
                   </td>
                   <td className="px-4 py-4">
@@ -350,13 +350,13 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
                         onExpired={() => {}}
                       />
                     ) : (
-                      <span className="text-gray-500">-</span>
+                      <span className="text-slate-500 dark:text-gray-500">-</span>
                     )}
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       {showControls && pod.status === 'available' && console && (
-                        <button
+                        <button type="button"
                           onClick={() => onCreateSession(pod)}
                           className="flex items-center gap-1 px-3 py-1.5 bg-green-500 hover:bg-green-400 text-white text-xs rounded-lg transition-colors"
                         >
@@ -365,7 +365,7 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
                         </button>
                       )}
                       {session?.status === 'pending' && session?.payment_status === 'pending' && (
-                        <button
+                        <button type="button"
                           onClick={() => onPayment(session)}
                           className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-white text-xs rounded-lg transition-colors"
                         >
@@ -374,7 +374,7 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
                         </button>
                       )}
                       {session?.status === 'pending' && session?.payment_status === 'paid' && (
-                        <button
+                        <button type="button"
                           onClick={() => handleStartSession(pod)}
                           className="flex items-center gap-1 px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-white text-xs rounded-lg transition-colors"
                         >
@@ -384,14 +384,14 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
                       )}
                       {session?.status === 'active' && (
                         <>
-                          <button
+                          <button type="button"
                             onClick={() => setExtendSession(session)}
                             className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-white text-xs rounded-lg transition-colors"
                           >
                             <Timer className="w-3 h-3" />
                             Extend
                           </button>
-                          <button
+                          <button type="button"
                             onClick={() => handleEndSession(pod)}
                             className="flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-400 text-white text-xs rounded-lg transition-colors"
                           >
@@ -401,17 +401,17 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
                         </>
                       )}
                       {(session?.status === 'pending' || session?.status === 'active') && (
-                        <button
+                        <button type="button"
                           onClick={() => handleCancelSession(pod)}
-                          className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-gray-700 hover:border-red-500/30 rounded-lg transition-colors"
+                          className="p-1.5 text-slate-600 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-slate-300 dark:border-gray-700 hover:border-red-500/30 rounded-lg transition-colors"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       )}
                       {showControls && pod.status === 'available' && (
-                        <button
+                        <button type="button"
                           onClick={() => onEditPod(pod)}
-                          className="p-1.5 text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 border border-gray-700 hover:border-cyan-500/30 rounded-lg transition-colors"
+                          className="p-1.5 text-slate-600 dark:text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 border border-slate-300 dark:border-gray-700 hover:border-cyan-500/30 rounded-lg transition-colors"
                           title="Edit Pod Settings"
                         >
                           <Settings className="w-3 h-3" />
@@ -427,7 +427,7 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
       </div>
 
       {filteredAndSortedPods.length === 0 && (
-        <div className="p-8 text-center text-gray-500">
+        <div className="p-8 text-center text-slate-500 dark:text-gray-500">
           No pods found matching your criteria
         </div>
       )}

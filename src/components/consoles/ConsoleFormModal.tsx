@@ -85,24 +85,24 @@ export function ConsoleFormModal({ console: editingConsole, onClose, onSuccess }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1a1a24] rounded-xl border border-gray-800 w-full max-w-md overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-gray-800">
+      <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 w-full max-w-md overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-              <Gamepad2 className="w-5 h-5 text-white" />
+              <Gamepad2 className="w-5 h-5 text-slate-900 dark:text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
                 {isEditing ? 'Edit Console' : 'Add New Console'}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-slate-600 dark:text-gray-400">
                 {isEditing ? 'Update console details' : 'Add a gaming console'}
               </p>
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -116,7 +116,7 @@ export function ConsoleFormModal({ console: editingConsole, onClose, onSuccess }
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
               Console Name *
             </label>
             <input
@@ -124,19 +124,19 @@ export function ConsoleFormModal({ console: editingConsole, onClose, onSuccess }
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., PlayStation 5 #1"
-              className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+              className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-3 px-4 text-slate-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
               Console Type *
             </label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+              className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-3 px-4 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
               required
             >
               {consoleTypes.map((t) => (
@@ -148,13 +148,13 @@ export function ConsoleFormModal({ console: editingConsole, onClose, onSuccess }
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
               Status *
             </label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as 'available' | 'in_use' | 'maintenance')}
-              className="w-full bg-[#0a0a0f] border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+              className="w-full bg-slate-50 dark:bg-[#0a0a0f] border border-slate-300 dark:border-gray-700 rounded-lg py-3 px-4 text-slate-900 dark:text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
               required
             >
               {consoleStatuses.map((s) => (
@@ -180,14 +180,14 @@ export function ConsoleFormModal({ console: editingConsole, onClose, onSuccess }
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 rounded-lg transition-colors"
+              className="flex-1 px-4 py-3 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-gray-700 hover:border-gray-600 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || !name.trim()}
-              className="flex-1 px-4 py-3 bg-purple-500 hover:bg-purple-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-purple-500 hover:bg-purple-400 disabled:bg-slate-200 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>Processing...</>

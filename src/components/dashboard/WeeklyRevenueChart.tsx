@@ -66,19 +66,19 @@ export function WeeklyRevenueChart({ sessions }: WeeklyRevenueChartProps) {
     : 0;
 
   return (
-    <div className="bg-[#1a1a24] rounded-xl border border-gray-800 p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-white">Weekly Revenue</h3>
-          <p className="text-gray-400 text-sm">This week vs last week</p>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Weekly Revenue</h3>
+          <p className="text-slate-600 dark:text-gray-400 text-sm">This week vs last week</p>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-cyan-400">RM {totalRevenue.toFixed(2)}</p>
-          <div className="flex items-center justify-end gap-1">
+        <div className="text-left sm:text-right">
+          <p className="text-xl sm:text-2xl font-bold text-cyan-400">RM {totalRevenue.toFixed(2)}</p>
+          <div className="flex items-center sm:justify-end gap-1">
             <span className={`text-xs ${weekOverWeekChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {weekOverWeekChange >= 0 ? '+' : ''}{weekOverWeekChange.toFixed(1)}%
             </span>
-            <span className="text-gray-400 text-xs">vs last week</span>
+            <span className="text-slate-600 dark:text-gray-400 text-xs">vs last week</span>
           </div>
         </div>
       </div>
@@ -123,12 +123,12 @@ export function WeeklyRevenueChart({ sessions }: WeeklyRevenueChartProps) {
       
       <div className="flex items-center justify-center gap-4 mt-2">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-gray-600"></div>
-          <span className="text-xs text-gray-400">Last Week</span>
+          <div className="w-3 h-3 rounded-full bg-slate-400 dark:bg-gray-600"></div>
+          <span className="text-xs text-slate-600 dark:text-gray-400">Last Week</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
-          <span className="text-xs text-gray-400">This Week</span>
+          <span className="text-xs text-slate-600 dark:text-gray-400">This Week</span>
         </div>
       </div>
     </div>

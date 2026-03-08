@@ -168,12 +168,24 @@ export const usePodStore = create<PodState>()((set) => ({
 
   fetchCanvasSettings: async () => {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('canvas_settings')
         .select('*')
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        const insertResult = await supabase
+          .from('canvas_settings')
+          .insert({ background_image: null, canvas_width: 1200, canvas_height: 800 })
+          .select('*')
+          .single();
+
+        if (insertResult.error) throw insertResult.error;
+        data = insertResult.data;
+      }
+
       set({ canvasSettings: data as CanvasSettings });
     } catch (error) {
       set({
@@ -184,18 +196,37 @@ export const usePodStore = create<PodState>()((set) => ({
 
   updateCanvasBackground: async (base64Image: string | null) => {
     try {
-      const { error } = await supabase
+      let settings = usePodStore.getState().canvasSettings;
+      if (!settings) {
+        const { data, error } = await supabase
+          .from('canvas_settings')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        settings = (data as CanvasSettings | null) ?? null;
+      }
+
+      if (!settings) {
+        const insertResult = await supabase
+          .from('canvas_settings')
+          .insert({ background_image: null, canvas_width: 1200, canvas_height: 800 })
+          .select('*')
+          .single();
+        if (insertResult.error) throw insertResult.error;
+        settings = insertResult.data as CanvasSettings;
+      }
+
+      const { data: updated, error } = await supabase
         .from('canvas_settings')
         .update({ background_image: base64Image })
-        .eq('id', (await supabase.from('canvas_settings').select('id').single()).data?.id);
+        .eq('id', settings.id)
+        .select('*')
+        .single();
 
       if (error) throw error;
 
-      set((state) => ({
-        canvasSettings: state.canvasSettings
-          ? { ...state.canvasSettings, background_image: base64Image }
-          : null
-      }));
+      set({ canvasSettings: updated as CanvasSettings });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to update canvas background'

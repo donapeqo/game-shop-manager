@@ -125,17 +125,17 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header with Date/Time and Quick Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <DateTimeDisplay />
         <div className="flex items-center gap-3">
-          <button
+          <button type="button"
             onClick={() => {
               const availablePod = pods.find(p => p.status === 'available' && p.console_id);
               if (availablePod) {
                 setSelectedPod(availablePod);
               }
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-lg transition-colors"
+            className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Session

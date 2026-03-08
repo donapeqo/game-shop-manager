@@ -48,15 +48,15 @@ export function HourlyRevenueChart({ sessions }: HourlyRevenueChartProps) {
   const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
 
   return (
-    <div className="bg-[#1a1a24] rounded-xl border border-gray-800 p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-white">Hourly Revenue Today</h3>
-          <p className="text-gray-400 text-sm">Revenue breakdown by hour</p>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Hourly Revenue Today</h3>
+          <p className="text-slate-600 dark:text-gray-400 text-sm">Revenue breakdown by hour</p>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-cyan-400">RM {totalRevenue.toFixed(2)}</p>
-          <p className="text-gray-400 text-xs">Total today</p>
+        <div className="text-left sm:text-right">
+          <p className="text-xl sm:text-2xl font-bold text-cyan-400">RM {totalRevenue.toFixed(2)}</p>
+          <p className="text-slate-600 dark:text-gray-400 text-xs">Total today</p>
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Pod, Console, Session, CanvasSettings } from '@/types';
 import { DraggablePod } from './DraggablePod';
 import { ImagePlus, X, Grid3X3 } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
 
 const TUYA_GATEWAY_BASE_URL = (import.meta.env.VITE_TUYA_GATEWAY_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
 type PlugState = 'on' | 'off' | 'offline' | 'loading';
@@ -39,6 +40,7 @@ export function CanvasView({
   onBackgroundRemove,
   showControls = false,
 }: CanvasViewProps) {
+  const { theme } = useTheme();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -116,13 +118,14 @@ export function CanvasView({
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       alert('Image must be less than 2MB');
+      event.target.value = '';
       return;
     }
 
     setIsUploading(true);
 
     const img = new Image();
-    img.onload = () => {
+    img.onload = async () => {
       // Resize image to max 1200px width
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -131,15 +134,28 @@ export function CanvasView({
       canvas.height = img.height * scale;
       ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Convert to base64 JPEG at 80% quality
-      const base64 = canvas.toDataURL('image/jpeg', 0.8);
-      onBackgroundUpload(base64);
+      try {
+        // Convert to base64 JPEG at 80% quality
+        const base64 = canvas.toDataURL('image/jpeg', 0.8);
+        await onBackgroundUpload(base64);
+      } catch {
+        alert('Failed to upload background image');
+      } finally {
+        setIsUploading(false);
+      }
+    };
+    img.onerror = () => {
+      alert('Invalid image file');
       setIsUploading(false);
     };
 
     const reader = new FileReader();
     reader.onload = (e) => {
       img.src = e.target?.result as string;
+    };
+    reader.onerror = () => {
+      alert('Failed to read image file');
+      setIsUploading(false);
     };
     reader.readAsDataURL(file);
 
@@ -148,18 +164,19 @@ export function CanvasView({
   };
 
   const backgroundImage = canvasSettings?.background_image;
+  const isDark = theme === 'dark';
 
   return (
-    <div className="relative bg-[#0a0a0f] rounded-xl border border-gray-800 overflow-hidden">
+    <div className="relative bg-slate-50 dark:bg-[#0a0a0f] rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-800">
-        <div className="flex items-center gap-4">
-          <button
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border-b border-slate-200 dark:border-gray-800">
+        <div className="flex items-center gap-2">
+          <button type="button"
             onClick={() => setShowGrid(!showGrid)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
               showGrid
                 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                : 'bg-[#1a1a24] text-gray-400 border border-gray-800 hover:text-white'
+                : 'bg-white dark:bg-[#1a1a24] text-slate-600 dark:text-gray-400 border border-slate-200 dark:border-gray-800 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Grid3X3 className="w-4 h-4" />
@@ -167,17 +184,17 @@ export function CanvasView({
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {backgroundImage && (
-            <button
+            <button type="button"
               onClick={onBackgroundRemove}
-              className="flex items-center gap-2 px-3 py-2 bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors text-sm"
             >
               <X className="w-4 h-4" />
               <span className="text-sm">Remove Background</span>
             </button>
           )}
-          <label className="flex items-center gap-2 px-3 py-2 bg-[#1a1a24] text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-800 hover:text-white transition-colors cursor-pointer"
+          <label className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#1a1a24] text-slate-700 dark:text-gray-300 border border-slate-300 dark:border-gray-700 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-sm"
           >
             <ImagePlus className="w-4 h-4" />
             <span className="text-sm">{isUploading ? 'Uploading...' : 'Upload Background'}</span>
@@ -193,17 +210,17 @@ export function CanvasView({
       </div>
 
       {/* Canvas Container */}
-      <div className="overflow-auto p-4">
+      <div className="overflow-auto p-3 sm:p-4">
         <div
           ref={canvasRef}
-          className="relative mx-auto"
+          className="relative mx-auto min-w-[1200px]"
           style={{
             width: CANVAS_WIDTH,
             height: CANVAS_HEIGHT,
             backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundColor: backgroundImage ? undefined : '#1a1a24',
+            backgroundColor: backgroundImage ? undefined : isDark ? '#1a1a24' : '#e2e8f0',
           }}
         >
           {/* Grid Overlay */}
@@ -212,8 +229,8 @@ export function CanvasView({
               className="absolute inset-0 pointer-events-none"
               style={{
                 backgroundImage: `
-                  linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-                  linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)
+                  linear-gradient(to right, ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.08)'} 1px, transparent 1px),
+                  linear-gradient(to bottom, ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.08)'} 1px, transparent 1px)
                 `,
                 backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
               }}

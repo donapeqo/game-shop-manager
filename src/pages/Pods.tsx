@@ -90,16 +90,16 @@ export function PodsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Pod Management</h1>
-          <p className="text-gray-400">Manage gaming pod layout and assignments</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">Pod Management</h1>
+          <p className="text-slate-600 dark:text-gray-400">Manage gaming pod layout and assignments</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
-          <button
+          <button type="button"
             onClick={handleAddPod}
-            className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-lg transition-colors"
+            className="justify-center flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-white rounded-lg transition-colors"
           >
             <Plus className="w-5 h-5" />
             Add Pod

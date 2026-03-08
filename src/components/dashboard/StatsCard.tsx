@@ -28,7 +28,7 @@ export function StatsCard({
 
   const getTrendIcon = () => {
     if (comparison === undefined || comparison === 0) {
-      return <Minus className="w-3 h-3 text-gray-400" />;
+      return <Minus className="w-3 h-3 text-slate-600 dark:text-gray-400" />;
     }
     if (comparison > 0) {
       return <TrendingUp className="w-3 h-3 text-green-400" />;
@@ -37,7 +37,7 @@ export function StatsCard({
   };
 
   const getTrendColor = () => {
-    if (comparison === undefined || comparison === 0) return 'text-gray-400';
+    if (comparison === undefined || comparison === 0) return 'text-slate-600 dark:text-gray-400';
     if (comparison > 0) return 'text-green-400';
     return 'text-red-400';
   };
@@ -46,8 +46,8 @@ export function StatsCard({
     <div className={`rounded-xl border p-4 ${getColorClasses()}`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-gray-400 text-sm mb-1">{title}</p>
-          <p className="text-3xl font-bold text-white">{value}</p>
+          <p className="text-slate-600 dark:text-gray-400 text-sm mb-1">{title}</p>
+          <p className="text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
           
           {comparison !== undefined && (
             <div className="flex items-center gap-1 mt-2">
@@ -60,7 +60,7 @@ export function StatsCard({
         </div>
         
         {icon && (
-          <div className="p-2 bg-gray-800/50 rounded-lg">
+          <div className="p-2 bg-slate-100 dark:bg-gray-800/50 rounded-lg">
             {icon}
           </div>
         )}

@@ -132,6 +132,24 @@ npm run dev
 
 Open http://localhost:5173 and log in with your admin credentials.
 
+### 7. Access from Phone on Same Wi-Fi (LAN)
+
+Run Vite with LAN host binding:
+
+```bash
+npm run dev -- --host 0.0.0.0 --port 5173
+```
+
+Find your Mac local IP:
+
+```bash
+ifconfig | grep "inet "
+```
+
+Look for your LAN address (example: `192.168.100.215`), then open on phone:
+
+`http://<YOUR_MAC_IP>:5173`
+
 ## Local Tuya Setup (Mac Gateway)
 
 Use this if you want pod sessions to control smart plugs locally.
@@ -145,15 +163,24 @@ export TUYA_DEVICE_ID="REPLACE_WITH_DEVICE_ID"
 export TUYA_IP="REPLACE_WITH_DEVICE_IP"
 export TUYA_LOCAL_KEY="REPLACE_WITH_LOCAL_KEY"
 export TUYA_VERSION="3.5"
+export TUYA_WEB_HOST="0.0.0.0"
+export TUYA_WEB_PORT="8787"
 python3 app.py
 ```
 
-Gateway URL: `http://127.0.0.1:8787`
+Gateway URL on Mac: `http://127.0.0.1:8787`  
+Gateway URL from phone/other devices: `http://<YOUR_MAC_IP>:8787`
 
 ### 2. Run the app and open Pods page
 
 ```bash
-npm run dev -- --host 127.0.0.1 --port 5173
+npm run dev -- --host 0.0.0.0 --port 5173
+```
+
+Set frontend gateway URL for LAN in `.env`:
+
+```env
+VITE_TUYA_GATEWAY_URL=http://<YOUR_MAC_IP>:8787
 ```
 
 ### 3. Register pods to plugs

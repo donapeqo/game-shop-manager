@@ -61,9 +61,9 @@ export function ConsolePerformance({ sessions, consoles }: ConsolePerformancePro
 
   if (consoleStats.length === 0) {
     return (
-      <div className="bg-[#1a1a24] rounded-xl border border-gray-800 p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Console Performance</h3>
-        <div className="text-center py-8 text-gray-500">
+      <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 p-6">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Console Performance</h3>
+        <div className="text-center py-8 text-slate-500 dark:text-gray-500">
           <Gamepad2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
           <p>No console data available</p>
         </div>
@@ -72,10 +72,10 @@ export function ConsolePerformance({ sessions, consoles }: ConsolePerformancePro
   }
 
   return (
-    <div className="bg-[#1a1a24] rounded-xl border border-gray-800 p-6">
+    <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Console Performance</h3>
-        <span className="text-gray-400 text-sm">By revenue</span>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Console Performance</h3>
+        <span className="text-slate-600 dark:text-gray-400 text-sm">By revenue</span>
       </div>
 
       <div className="space-y-4">
@@ -89,22 +89,22 @@ export function ConsolePerformance({ sessions, consoles }: ConsolePerformancePro
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{getConsoleIcon(console.consoleType)}</span>
-                  <span className="text-white font-medium">{console.consoleName}</span>
+                  <span className="text-slate-900 dark:text-white font-medium">{console.consoleName}</span>
                 </div>
                 <div className="text-right">
                   <p className="text-cyan-400 font-bold">RM {console.revenue.toFixed(2)}</p>
-                  <p className="text-gray-400 text-xs">{console.sessionCount} sessions</p>
+                  <p className="text-slate-600 dark:text-gray-400 text-xs">{console.sessionCount} sessions</p>
                 </div>
               </div>
               
-              <div className="w-full bg-gray-800 rounded-full h-2">
+              <div className="w-full bg-slate-100 dark:bg-gray-800 rounded-full h-2">
                 <div
                   className="bg-cyan-500 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${percentage}%` }}
                 />
               </div>
               
-              <p className="text-gray-500 text-xs text-right">{percentage.toFixed(1)}%</p>
+              <p className="text-slate-500 dark:text-gray-500 text-xs text-right">{percentage.toFixed(1)}%</p>
             </div>
           );
         })}

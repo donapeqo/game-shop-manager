@@ -81,7 +81,7 @@ export function DraggablePod({
       case 'occupied': return 'border-cyan-500/50 bg-cyan-500/5 hover:border-cyan-500';
       case 'payment_pending': return 'border-amber-500/50 bg-amber-500/5 hover:border-amber-500';
       case 'maintenance': return 'border-red-500/50 bg-red-500/5 hover:border-red-500';
-      default: return 'border-gray-700 bg-gray-800/30';
+      default: return 'border-slate-300 dark:border-gray-700 bg-slate-100 dark:bg-gray-800/30';
     }
   };
 
@@ -252,14 +252,14 @@ export function DraggablePod({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           {getStatusIcon(pod.status)}
-          <span className="font-bold text-white text-sm truncate">{pod.name}</span>
+          <span className="font-bold text-slate-900 dark:text-white text-sm truncate">{pod.name}</span>
         </div>
       </div>
 
       {/* Console Info */}
       <div className="flex items-center gap-1.5 mb-2">
-        <Gamepad2 className="w-3 h-3 text-gray-400" />
-        <span className="text-xs text-gray-300 truncate">
+        <Gamepad2 className="w-3 h-3 text-slate-600 dark:text-gray-400" />
+        <span className="text-xs text-slate-700 dark:text-gray-300 truncate">
           {console ? console.name : 'No console'}
         </span>
       </div>
@@ -270,7 +270,7 @@ export function DraggablePod({
             plugState === 'on'
               ? 'text-green-400 border-green-500/30 bg-green-500/10'
               : plugState === 'off'
-                ? 'text-gray-300 border-gray-500/30 bg-gray-500/10'
+                ? 'text-slate-700 dark:text-gray-300 border-slate-300 dark:border-gray-500/30 bg-slate-200/60 dark:bg-gray-500/10'
                 : plugState === 'loading'
                   ? 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10'
                   : 'text-red-400 border-red-500/30 bg-red-500/10'
@@ -283,7 +283,7 @@ export function DraggablePod({
       {/* Session Info */}
       {session && (
         <div className="space-y-1 mb-2">
-          <div className="text-xs text-gray-400 truncate">
+          <div className="text-xs text-slate-600 dark:text-gray-400 truncate">
             {session.customer_phone}
           </div>
           {session.status === 'active' && (
@@ -300,7 +300,7 @@ export function DraggablePod({
       {showControls && showActions && (
         <div className="flex flex-wrap gap-1 mt-auto">
           {pod.status === 'available' && console && (
-            <button
+            <button type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onCreateSession();
@@ -312,7 +312,7 @@ export function DraggablePod({
             </button>
           )}
           {session?.status === 'pending' && session?.payment_status === 'pending' && (
-            <button
+            <button type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onPayment();
@@ -324,7 +324,7 @@ export function DraggablePod({
             </button>
           )}
           {session?.status === 'pending' && session?.payment_status === 'paid' && (
-            <button
+            <button type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 handleStartSession();
@@ -337,7 +337,7 @@ export function DraggablePod({
           )}
           {session?.status === 'active' && (
             <>
-              <button
+              <button type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (session) setExtendSession(session);
@@ -347,7 +347,7 @@ export function DraggablePod({
                 <Timer className="w-3 h-3" />
                 Extend
               </button>
-              <button
+              <button type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleEndSession();
@@ -360,12 +360,12 @@ export function DraggablePod({
             </>
           )}
           {(session?.status === 'pending' || session?.status === 'active') && (
-            <button
+            <button type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 handleCancelSession();
               }}
-              className="px-2 py-1 text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-gray-700 hover:border-red-500/30 rounded transition-colors"
+              className="px-2 py-1 text-slate-600 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10 border border-slate-300 dark:border-gray-700 hover:border-red-500/30 rounded transition-colors"
             >
               <X className="w-3 h-3" />
             </button>
@@ -375,12 +375,12 @@ export function DraggablePod({
 
       {/* Resize Handle */}
       {showControls && showActions && (
-        <button
+        <button type="button"
           onMouseDown={handleResizeMouseDown}
           className={`absolute -bottom-2 -right-2 p-1.5 rounded-md border shadow-lg transition-colors ${
             isResizing
               ? 'bg-cyan-500 text-white border-cyan-400'
-              : 'bg-[#1a1a24] text-gray-300 border-gray-700 hover:text-white hover:border-gray-500'
+              : 'bg-white dark:bg-[#1a1a24] text-slate-700 dark:text-gray-300 border-slate-300 dark:border-gray-700 hover:text-slate-900 dark:hover:text-white hover:border-gray-500'
           }`}
           title="Drag to resize"
           aria-label="Drag to resize pod"
