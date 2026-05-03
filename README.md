@@ -132,6 +132,77 @@ npm run dev
 
 Open http://localhost:5173 and log in with your admin credentials.
 
+## Deploy to Cloudflare
+
+The main app is a good fit for **Cloudflare Pages** because it builds to static files and talks directly to Supabase from the browser.
+
+### Recommended architecture
+
+- **Cloudflare Pages**: Hosts the React/Vite frontend
+- **Supabase**: Database, auth, and realtime
+- **Local Tuya gateway**: Stays on a machine inside your shop network if you want smart plug control
+
+### Important limitation for Tuya
+
+The frontend can be hosted on Cloudflare, but the local Tuya gateway in `tools/tuya_local_webapp` should **not** be moved to Cloudflare Pages. It depends on local-network access to the smart plugs.
+
+If you still want remote smart plug control after deploying the frontend, expose the gateway from your shop using something like **Cloudflare Tunnel** and point `VITE_TUYA_GATEWAY_URL` at that HTTPS URL.
+
+The current gateway implementation also does **not** include authentication and is permissive with CORS, so do not expose it publicly without adding access controls first.
+
+### Option A: Deploy with Cloudflare Pages dashboard
+
+1. Push this repo to GitHub
+2. In Cloudflare, go to **Workers & Pages** -> **Create application** -> **Pages** -> **Connect to Git**
+3. Select this repository
+4. Use these build settings:
+
+```bash
+Framework preset: Vite
+Build command: npm run build
+Build output directory: dist
+Root directory: game-shop-management
+```
+
+5. Add these environment variables in Pages:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+6. Optional, only if you use the Tuya gateway remotely:
+
+```env
+VITE_TUYA_GATEWAY_URL=https://your-tunnel-domain.example.com
+```
+
+7. Deploy
+
+### Option B: Deploy with Wrangler CLI
+
+From the app directory:
+
+```bash
+cd game-shop-management
+npm install
+npm run build
+npx wrangler pages deploy dist
+```
+
+The included `wrangler.toml` sets the Pages output directory for Wrangler-based deploys.
+
+### SPA routing
+
+This repo includes `public/_redirects` so Cloudflare serves `index.html` for routes like `/dashboard`, `/pods`, and `/history`.
+
+### Post-deploy checklist
+
+- In Supabase Auth settings, add your Cloudflare Pages domain to the allowed site URLs / redirect URLs
+- Confirm login works on the deployed domain
+- Confirm page refresh works on `/dashboard` and `/pods`
+- If using Tuya remotely, enable CORS/auth protection on the gateway before exposing it publicly
+
 ### 7. Access from Phone on Same Wi-Fi (LAN)
 
 Run Vite with LAN host binding:

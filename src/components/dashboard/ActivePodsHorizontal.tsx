@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Pod, Console, Session } from '@/types';
 import { SessionTimer } from '@/components/sessions/SessionTimer';
 import { ExtendSessionModal } from '@/components/sessions/ExtendSessionModal';
-import { usePodStore } from '@/store/useStore';
+import { useAppSettingsStore, usePodStore } from '@/store/useStore';
 import { 
   Play, 
   Pause, 
@@ -35,6 +35,7 @@ export function ActivePodsHorizontal({
   onPayment
 }: ActivePodsHorizontalProps) {
   const { updatePod, updateSession, cancelSession, completeSession } = usePodStore();
+  const tuyaConnectivityEnabled = useAppSettingsStore((state) => state.tuyaConnectivityEnabled);
   const [extendSession, setExtendSession] = useState<Session | null>(null);
   const [plugStates, setPlugStates] = useState<Record<string, PlugState>>({});
 
@@ -42,6 +43,11 @@ export function ActivePodsHorizontal({
     let cancelled = false;
 
     const fetchPlugStates = async () => {
+      if (!tuyaConnectivityEnabled) {
+        if (!cancelled) setPlugStates({});
+        return;
+      }
+
       const tuyaPods = pods.filter((pod) => pod.tuya_enabled);
       if (tuyaPods.length === 0) {
         if (!cancelled) setPlugStates({});
@@ -92,7 +98,7 @@ export function ActivePodsHorizontal({
       cancelled = true;
       clearInterval(interval);
     };
-  }, [pods]);
+  }, [pods, tuyaConnectivityEnabled]);
 
   // Get only active and pending pods
   const activePods = pods.filter(pod => 
@@ -154,6 +160,13 @@ export function ActivePodsHorizontal({
 
   const getPlugBadge = (pod: Pod) => {
     if (!pod.tuya_enabled) return null;
+    if (!tuyaConnectivityEnabled) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border text-amber-500 bg-amber-500/10 border-amber-500/20">
+          plug disabled
+        </span>
+      );
+    }
     const state = plugStates[pod.id] ?? 'loading';
     const color =
       state === 'on'

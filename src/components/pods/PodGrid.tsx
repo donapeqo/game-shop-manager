@@ -233,11 +233,7 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
           pod={selectedPod}
           console={consoles.find(c => c.id === selectedPod.console_id)!}
           onClose={() => setSelectedPod(null)}
-          onSuccess={() => {
-            fetchSessions();
-            fetchPods();
-            setSelectedPod(null);
-          }}
+          onSuccess={() => setSelectedPod(null)}
         />
       )}
 
@@ -246,11 +242,7 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
         <PaymentModal
           session={paymentSession}
           onClose={() => setPaymentSession(null)}
-          onSuccess={() => {
-            fetchSessions();
-            fetchPods();
-            setPaymentSession(null);
-          }}
+          onSuccess={() => setPaymentSession(null)}
         />
       )}
 

@@ -6,7 +6,8 @@ import {
   LayoutDashboard, 
   Grid3X3, 
   Gamepad2, 
-  History, 
+  Users, 
+  Settings,
   LogOut,
   User,
   Menu,
@@ -17,7 +18,8 @@ const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/pods', label: 'Pods', icon: Grid3X3 },
   { path: '/consoles', label: 'Consoles', icon: Gamepad2 },
-  { path: '/history', label: 'History', icon: History },
+  { path: '/history', label: 'Customers', icon: Users },
+  { path: '/setup', label: 'Setup', icon: Settings },
 ];
 
 export function Layout() {
@@ -148,7 +150,7 @@ export function Layout() {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-white/95 dark:bg-[#12121a]/95 backdrop-blur border-t border-slate-200 dark:border-gray-800">
-        <ul className="grid grid-cols-4">
+        <ul className="grid grid-cols-5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;

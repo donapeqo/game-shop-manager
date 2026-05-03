@@ -3,6 +3,7 @@ import type { Pod, Console, Session, CanvasSettings } from '@/types';
 import { DraggablePod } from './DraggablePod';
 import { ImagePlus, X, Grid3X3 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { useAppSettingsStore } from '@/store/useStore';
 
 const TUYA_GATEWAY_BASE_URL = (import.meta.env.VITE_TUYA_GATEWAY_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
 type PlugState = 'on' | 'off' | 'offline' | 'loading';
@@ -23,7 +24,7 @@ interface CanvasViewProps {
 }
 
 const CANVAS_WIDTH = 1200;
-const CANVAS_HEIGHT = 800;
+const MIN_CANVAS_HEIGHT = 800;
 const GRID_SIZE = 20;
 
 export function CanvasView({
@@ -41,6 +42,7 @@ export function CanvasView({
   showControls = false,
 }: CanvasViewProps) {
   const { theme } = useTheme();
+  const tuyaConnectivityEnabled = useAppSettingsStore((state) => state.tuyaConnectivityEnabled);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -50,6 +52,11 @@ export function CanvasView({
     let cancelled = false;
 
     const fetchPlugStates = async () => {
+      if (!tuyaConnectivityEnabled) {
+        if (!cancelled) setPlugStates({});
+        return;
+      }
+
       const tuyaPods = pods.filter((pod) => pod.tuya_enabled);
       if (tuyaPods.length === 0) {
         if (!cancelled) setPlugStates({});
@@ -100,7 +107,7 @@ export function CanvasView({
       cancelled = true;
       clearInterval(interval);
     };
-  }, [pods]);
+  }, [pods, tuyaConnectivityEnabled]);
 
   const getPodConsole = (pod: Pod) => {
     return consoles.find(c => c.id === pod.console_id);
@@ -165,9 +172,10 @@ export function CanvasView({
 
   const backgroundImage = canvasSettings?.background_image;
   const isDark = theme === 'dark';
+  const canvasHeight = `max(${MIN_CANVAS_HEIGHT}px, calc(100dvh - 15rem))`;
 
   return (
-    <div className="relative bg-slate-50 dark:bg-[#0a0a0f] rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
+    <div className="relative flex min-h-[calc(100dvh-12rem)] flex-col bg-slate-50 dark:bg-[#0a0a0f] rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
       {/* Toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 border-b border-slate-200 dark:border-gray-800">
         <div className="flex items-center gap-2">
@@ -210,13 +218,13 @@ export function CanvasView({
       </div>
 
       {/* Canvas Container */}
-      <div className="overflow-auto p-3 sm:p-4">
+      <div className="flex-1 overflow-auto p-3 sm:p-4">
         <div
           ref={canvasRef}
           className="relative mx-auto min-w-[1200px]"
           style={{
             width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
+            height: canvasHeight,
             backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -253,7 +261,7 @@ export function CanvasView({
                 const session = getPodSession(pod);
                 if (session) onPayment(session);
               }}
-              plugState={plugStates[pod.id]}
+              plugState={tuyaConnectivityEnabled ? plugStates[pod.id] : 'disabled'}
               showControls={showControls}
             />
           ))}
