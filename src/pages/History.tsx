@@ -134,7 +134,7 @@ export function HistoryPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-slate-600 dark:text-gray-400">Total Customers</span>
@@ -148,7 +148,7 @@ export function HistoryPage() {
             <span className="text-sm text-slate-600 dark:text-gray-400">Lifetime Revenue</span>
             <DollarSign className="w-5 h-5 text-green-400" />
           </div>
-          <p className="text-3xl font-bold text-slate-900 dark:text-white">RM {totalCustomerRevenue.toFixed(2)}</p>
+          <p className="break-words text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">RM {totalCustomerRevenue.toFixed(2)}</p>
         </div>
 
         <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 p-5">
@@ -163,7 +163,7 @@ export function HistoryPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)] gap-6">
+      <div className="grid grid-cols-1 2xl:grid-cols-[380px_minmax(0,1fr)] gap-6">
         <div className="bg-white dark:bg-[#1a1a24] rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
           <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-gray-800 space-y-4">
             <div className="flex items-center justify-between gap-3">
@@ -264,7 +264,7 @@ export function HistoryPage() {
                       <span className="font-medium">{selectedCustomer.phone}</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 sm:min-w-[320px]">
+                  <div className="grid grid-cols-2 gap-3 lg:min-w-[320px]">
                     <div className="rounded-lg bg-slate-50 dark:bg-[#0a0a0f] border border-slate-200 dark:border-gray-800 p-3">
                       <p className="text-xs text-slate-600 dark:text-gray-400">Total Paid</p>
                       <p className="text-lg font-bold text-cyan-400 mt-1">RM {selectedCustomer.totalSpent.toFixed(2)}</p>
@@ -298,7 +298,7 @@ export function HistoryPage() {
               <div className="divide-y divide-slate-200 dark:divide-gray-800">
                 {selectedRentals.map((rental) => (
                   <div key={rental.id} className="p-4 sm:p-6 hover:bg-slate-100 dark:hover:bg-gray-800/30 transition-colors">
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
@@ -310,7 +310,7 @@ export function HistoryPage() {
                           </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4 text-sm">
                           <div className="flex items-center gap-2 text-slate-600 dark:text-gray-400">
                             <Calendar className="w-4 h-4" />
                             <span>{formatDate(rental.start_time)}</span>

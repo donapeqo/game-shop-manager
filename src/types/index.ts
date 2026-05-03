@@ -5,6 +5,14 @@ export interface User {
   name: string;
 }
 
+export interface CustomerProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string;
+  created_at: string;
+}
+
 export interface Console {
   id: string;
   name: string;
@@ -45,6 +53,7 @@ export interface CanvasPosition {
 
 export interface Session {
   id: string;
+  booking_id?: string | null;
   pod_id: string;
   console_id: string;
   customer_phone: string;
@@ -69,6 +78,37 @@ export interface RentalHistory {
   duration_minutes: number;
   amount_paid: number;
   created_at: string;
+}
+
+export interface Booking {
+  id: string;
+  customer_id: string;
+  pod_id: string;
+  console_id: string;
+  customer_name: string;
+  customer_phone: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  status: 'reserved' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled' | 'no_show';
+  payment_status: 'pending' | 'paid' | 'refunded';
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomerBooking extends Booking {
+  pod_name: string;
+  console_name: string;
+  console_type: string;
+}
+
+export interface AvailablePod {
+  pod_id: string;
+  pod_name: string;
+  console_id: string;
+  console_name: string;
+  console_type: string;
 }
 
 export type PodStatus = 'available' | 'occupied' | 'payment_pending' | 'maintenance';

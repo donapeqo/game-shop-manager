@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/lib/supabase';
-import type { User, Pod, Console, Session, CanvasSettings } from '@/types';
+import type { User, Pod, Console, Session, CanvasSettings, Booking } from '@/types';
 
 const TUYA_GATEWAY_BASE_URL = (import.meta.env.VITE_TUYA_GATEWAY_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
 
@@ -151,6 +151,7 @@ interface PodState {
   pods: Pod[];
   consoles: Console[];
   sessions: Session[];
+  bookings: Booking[];
   canvasSettings: CanvasSettings | null;
   isLoading: boolean;
   error: string | null;
@@ -158,6 +159,7 @@ interface PodState {
   fetchPods: () => Promise<void>;
   fetchConsoles: () => Promise<void>;
   fetchSessions: () => Promise<void>;
+  fetchBookings: () => Promise<void>;
   fetchCanvasSettings: () => Promise<void>;
   createPod: (pod: Omit<Pod, 'id' | 'created_at' | 'current_session_id'>) => Promise<Pod>;
   updatePod: (podId: string, updates: Partial<Pod>) => Promise<void>;
@@ -172,6 +174,8 @@ interface PodState {
   cancelSession: (sessionId: string, podId: string) => Promise<void>;
   extendSession: (sessionId: string, additionalMinutes: number, additionalPayment: number) => Promise<void>;
   completeSession: (sessionId: string, podId: string) => Promise<void>;
+  activateDueBookings: () => Promise<number>;
+  updateBookingStatus: (bookingId: string, status: Booking['status']) => Promise<void>;
   updateCanvasBackground: (base64Image: string | null) => Promise<void>;
   subscribeToChanges: () => void;
 }
@@ -180,6 +184,7 @@ export const usePodStore = create<PodState>()((set) => ({
   pods: [],
   consoles: [],
   sessions: [],
+  bookings: [],
   canvasSettings: null,
   isLoading: false,
   error: null,
@@ -299,6 +304,22 @@ export const usePodStore = create<PodState>()((set) => ({
     } catch (error) {
       set({ 
         error: error instanceof Error ? error.message : 'Failed to fetch sessions' 
+      });
+    }
+  },
+
+  fetchBookings: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('start_time', { ascending: true });
+
+      if (error) throw error;
+      set({ bookings: data as Booking[] });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch bookings'
       });
     }
   },
@@ -652,6 +673,15 @@ export const usePodStore = create<PodState>()((set) => ({
         });
 
       if (historyError) throw historyError;
+
+      if (session.booking_id) {
+        const { error: bookingError } = await supabase
+          .from('bookings')
+          .update({ status: 'completed' })
+          .eq('id', session.booking_id);
+
+        if (bookingError) throw bookingError;
+      }
       
       const { error: podError } = await supabase
         .from('pods')
@@ -688,6 +718,53 @@ export const usePodStore = create<PodState>()((set) => ({
     }
   },
 
+  activateDueBookings: async () => {
+    try {
+      const { data, error } = await supabase.rpc('activate_due_bookings');
+
+      if (error) throw error;
+
+      const activatedCount = typeof data === 'number' ? data : 0;
+
+      if (activatedCount > 0) {
+        await Promise.all([
+          usePodStore.getState().fetchBookings(),
+          usePodStore.getState().fetchPods(),
+          usePodStore.getState().fetchSessions(),
+        ]);
+      }
+
+      return activatedCount;
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to activate due bookings'
+      });
+      return 0;
+    }
+  },
+
+  updateBookingStatus: async (bookingId: string, status: Booking['status']) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        bookings: state.bookings.map((booking) =>
+          booking.id === bookingId ? { ...booking, status } : booking
+        ),
+      }));
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to update booking status'
+      });
+      throw error;
+    }
+  },
+
   subscribeToChanges: () => {
     supabase
       .channel('pods-changes')
@@ -705,6 +782,16 @@ export const usePodStore = create<PodState>()((set) => ({
         { event: '*', schema: 'public', table: 'sessions' },
         () => {
           usePodStore.getState().fetchSessions();
+        }
+      )
+      .subscribe();
+
+    supabase
+      .channel('bookings-changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'bookings' },
+        () => {
+          usePodStore.getState().fetchBookings();
         }
       )
       .subscribe();
