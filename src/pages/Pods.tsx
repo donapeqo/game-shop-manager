@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PodFormModal } from '@/components/pods/PodFormModal';
 import { CanvasView } from '@/components/pods/CanvasView';
+import { PodGrid } from '@/components/pods/PodGrid';
 import { PodListView } from '@/components/pods/PodListView';
 import { ViewToggle } from '@/components/pods/ViewToggle';
 import { CreateSessionModal } from '@/components/sessions/CreateSessionModal';
@@ -30,6 +31,10 @@ export function PodsPage() {
   const [editingPod, setEditingPod] = useState<Pod | null>(null);
   const [selectedPod, setSelectedPod] = useState<Pod | null>(null);
   const [paymentSession, setPaymentSession] = useState<Session | null>(null);
+  const [isTabletGridMode, setIsTabletGridMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 1280;
+  });
 
   // Load saved view preference
   useEffect(() => {
@@ -52,6 +57,18 @@ export function PodsPage() {
     fetchSessions();
     fetchCanvasSettings();
   }, [fetchPods, fetchConsoles, fetchSessions, fetchCanvasSettings]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsTabletGridMode(window.innerWidth < 1280);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const handleAddPod = () => {
     setEditingPod(null);
@@ -93,7 +110,11 @@ export function PodsPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">Pod Management</h1>
-          <p className="text-slate-600 dark:text-gray-400">Manage gaming pod layout and assignments</p>
+          <p className="text-slate-600 dark:text-gray-400">
+            {viewMode === 'grid' && isTabletGridMode
+              ? 'Tablet-optimized pod grid for quick operations'
+              : 'Manage gaming pod layout and assignments'}
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
@@ -109,20 +130,30 @@ export function PodsPage() {
 
       {/* Content */}
       {viewMode === 'grid' ? (
-        <CanvasView
-          pods={pods}
-          consoles={consoles}
-          sessions={sessions}
-          canvasSettings={canvasSettings}
-          onPodPositionChange={handlePodPositionChange}
-          onPodResize={handlePodResize}
-          onPodEdit={handleEditPod}
-          onCreateSession={setSelectedPod}
-          onPayment={setPaymentSession}
-          onBackgroundUpload={handleBackgroundUpload}
-          onBackgroundRemove={handleBackgroundRemove}
-          showControls
-        />
+        isTabletGridMode ? (
+          <PodGrid
+            pods={pods}
+            consoles={consoles}
+            sessions={sessions}
+            onEditPod={handleEditPod}
+            showControls
+          />
+        ) : (
+          <CanvasView
+            pods={pods}
+            consoles={consoles}
+            sessions={sessions}
+            canvasSettings={canvasSettings}
+            onPodPositionChange={handlePodPositionChange}
+            onPodResize={handlePodResize}
+            onPodEdit={handleEditPod}
+            onCreateSession={setSelectedPod}
+            onPayment={setPaymentSession}
+            onBackgroundUpload={handleBackgroundUpload}
+            onBackgroundRemove={handleBackgroundRemove}
+            showControls
+          />
+        )
       ) : (
         <PodListView
           pods={pods}

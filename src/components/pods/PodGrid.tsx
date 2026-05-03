@@ -99,7 +99,7 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
   return (
     <div className="space-y-4">
       {sortedRows.map(row => (
-        <div key={row} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div key={row} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           {podsByRow[row]
             .sort((a, b) => a.col - b.col)
             .map(pod => {
@@ -109,28 +109,40 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
               return (
                 <div
                   key={pod.id}
-                  className={`relative rounded-xl border-2 p-4 transition-all duration-200 ${getStatusColor(pod.status)}`}
+                  className={`relative rounded-xl border-2 p-4 sm:p-5 transition-all duration-200 ${getStatusColor(pod.status)}`}
                 >
                   {/* Pod Header */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(pod.status)}
-                      <span className="font-bold text-slate-900 dark:text-white text-lg">{pod.name}</span>
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(pod.status)}
+                        <span className="truncate font-bold text-slate-900 dark:text-white text-lg">{pod.name}</span>
+                      </div>
                     </div>
-                    {showControls && onEditPod && pod.status === 'available' && (
-                      <button type="button" 
-                        onClick={() => onEditPod(pod)}
-                        className="text-slate-600 dark:text-gray-400 hover:text-cyan-400 p-1 hover:bg-cyan-400/10 rounded transition-colors"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    )}
+                    <div className="flex shrink-0 items-start gap-2">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize ${
+                        pod.status === 'available' ? 'bg-green-500/20 text-green-400' :
+                        pod.status === 'occupied' ? 'bg-cyan-500/20 text-cyan-400' :
+                        pod.status === 'payment_pending' ? 'bg-amber-500/20 text-amber-400' :
+                        'bg-red-500/20 text-red-400'
+                      }`}>
+                        {pod.status.replace('_', ' ')}
+                      </span>
+                      {showControls && onEditPod && pod.status === 'available' && (
+                        <button type="button" 
+                          onClick={() => onEditPod(pod)}
+                          className="text-slate-600 dark:text-gray-400 hover:text-cyan-400 p-1 hover:bg-cyan-400/10 rounded transition-colors"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Console Info */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <Gamepad2 className="w-4 h-4 text-slate-600 dark:text-gray-400" />
-                    <span className="text-sm text-slate-700 dark:text-gray-300">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Gamepad2 className="w-4 h-4 shrink-0 text-slate-600 dark:text-gray-400" />
+                    <span className="truncate text-sm text-slate-700 dark:text-gray-300">
                       {console ? console.name : 'No console assigned'}
                     </span>
                   </div>
@@ -210,17 +222,6 @@ export function PodGrid({ pods, consoles, sessions, showControls = false, onEdit
                     </div>
                   )}
 
-                  {/* Status Badge */}
-                  <div className="absolute top-2 right-2">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
-                      pod.status === 'available' ? 'bg-green-500/20 text-green-400' :
-                      pod.status === 'occupied' ? 'bg-cyan-500/20 text-cyan-400' :
-                      pod.status === 'payment_pending' ? 'bg-amber-500/20 text-amber-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
-                      {pod.status.replace('_', ' ')}
-                    </span>
-                  </div>
                 </div>
               );
             })}

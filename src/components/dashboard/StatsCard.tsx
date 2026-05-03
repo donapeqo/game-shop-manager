@@ -47,7 +47,7 @@ export function StatsCard({
       <div className="flex items-start justify-between">
         <div>
           <p className="text-slate-600 dark:text-gray-400 text-sm mb-1">{title}</p>
-          <p className="text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
+          <p className="break-words text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
           
           {comparison !== undefined && (
             <div className="flex items-center gap-1 mt-2">

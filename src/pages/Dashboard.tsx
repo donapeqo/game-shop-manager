@@ -8,6 +8,7 @@ import { HourlyRevenueChart } from '@/components/dashboard/HourlyRevenueChart';
 import { WeeklyRevenueChart } from '@/components/dashboard/WeeklyRevenueChart';
 import { TopCustomers } from '@/components/dashboard/TopCustomers';
 import { ConsolePerformance } from '@/components/dashboard/ConsolePerformance';
+import { UpcomingBookings } from '@/components/dashboard/UpcomingBookings';
 import { CreateSessionModal } from '@/components/sessions/CreateSessionModal';
 import { PaymentModal } from '@/components/sessions/PaymentModal';
 import type { Pod, Session } from '@/types';
@@ -18,10 +19,12 @@ export function DashboardPage() {
     pods, 
     consoles, 
     sessions, 
+    bookings,
     isLoading, 
     fetchPods, 
     fetchConsoles, 
     fetchSessions, 
+    fetchBookings,
     subscribeToChanges 
   } = usePodStore();
 
@@ -32,8 +35,13 @@ export function DashboardPage() {
     fetchPods();
     fetchConsoles();
     fetchSessions();
+    fetchBookings();
     subscribeToChanges();
-  }, [fetchPods, fetchConsoles, fetchSessions, subscribeToChanges]);
+  }, [fetchPods, fetchConsoles, fetchSessions, fetchBookings, subscribeToChanges]);
+
+  const upcomingBookingsCount = useMemo(() => (
+    bookings.filter((booking) => booking.status === 'confirmed' || booking.status === 'reserved').length
+  ), [bookings]);
 
   // Calculate today's stats
   const todayStats = useMemo(() => {
@@ -144,7 +152,7 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-5 gap-4">
         <StatsCard
           title="Orders Today"
           value={todayStats.orders}
@@ -177,6 +185,12 @@ export function DashboardPage() {
           icon={<TrendingUp className="w-5 h-5 text-cyan-400" />}
           color="cyan"
         />
+        <StatsCard
+          title="Upcoming Bookings"
+          value={upcomingBookingsCount}
+          icon={<Calendar className="w-5 h-5 text-amber-400" />}
+          color="amber"
+        />
       </div>
 
       {/* Active Pods Section */}
@@ -188,14 +202,20 @@ export function DashboardPage() {
         onPayment={setPaymentSession}
       />
 
+      <UpcomingBookings
+        bookings={bookings}
+        pods={pods}
+        consoles={consoles}
+      />
+
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <HourlyRevenueChart sessions={sessions} />
         <WeeklyRevenueChart sessions={sessions} />
       </div>
 
       {/* Insights Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <TopCustomers sessions={sessions} />
         <ConsolePerformance sessions={sessions} consoles={consoles} />
       </div>

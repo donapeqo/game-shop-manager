@@ -1,16 +1,20 @@
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/useStore';
+import { usePodStore } from '@/store/useStore';
 import { ThemeToggle } from './ThemeToggle';
 import { 
   LayoutDashboard, 
   Grid3X3, 
   Gamepad2, 
+  CalendarClock,
   Users, 
   Settings,
   LogOut,
   User,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   X
 } from 'lucide-react';
 
@@ -18,6 +22,7 @@ const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/pods', label: 'Pods', icon: Grid3X3 },
   { path: '/consoles', label: 'Consoles', icon: Gamepad2 },
+  { path: '/bookings', label: 'Bookings', icon: CalendarClock },
   { path: '/history', label: 'Customers', icon: Users },
   { path: '/setup', label: 'Setup', icon: Settings },
 ];
@@ -26,11 +31,34 @@ export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { activateDueBookings } = usePodStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('layout-sidebar-collapsed') === 'true';
+  });
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    window.localStorage.setItem('layout-sidebar-collapsed', String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    void activateDueBookings();
+
+    const intervalId = window.setInterval(() => {
+      void activateDueBookings();
+    }, 30000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [activateDueBookings, user]);
 
   const handleLogout = async () => {
     await logout();
@@ -73,23 +101,42 @@ export function Layout() {
       )}
 
       <aside
-        className={`fixed md:static top-[57px] md:top-0 left-0 z-30 h-[calc(100vh-57px)] md:h-auto w-64 bg-white dark:bg-[#12121a] border-r border-slate-200 dark:border-gray-800 flex flex-col transition-transform duration-200 ${
+        className={`fixed md:sticky md:top-0 top-[57px] left-0 z-30 h-[calc(100vh-57px)] md:h-screen bg-white dark:bg-[#12121a] border-r border-slate-200 dark:border-gray-800 flex flex-col transition-all duration-200 ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0`}
+        } md:translate-x-0 ${isSidebarCollapsed ? 'md:w-[88px]' : 'md:w-64'}`}
       >
       {/* Sidebar */}
         {/* Logo */}
-        <div className="hidden md:block p-6 border-b border-slate-200 dark:border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+        <div className={`hidden md:block border-b border-slate-200 dark:border-gray-800 ${isSidebarCollapsed ? 'p-4' : 'p-6'}`}>
+          <div className={`flex ${isSidebarCollapsed ? 'justify-center' : 'items-center gap-3'}`}>
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shrink-0">
               <Gamepad2 className="w-5 h-5 text-slate-900 dark:text-white" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-slate-900 dark:text-white">Game Shop</h1>
-              <p className="text-xs text-slate-500 dark:text-gray-500">Management</p>
-            </div>
+            {!isSidebarCollapsed && (
+              <div>
+                <h1 className="text-lg font-bold text-slate-900 dark:text-white">Game Shop</h1>
+                <p className="text-xs text-slate-500 dark:text-gray-500">Management</p>
+              </div>
+            )}
           </div>
-          <ThemeToggle className="mt-4 w-full justify-center" />
+
+          <div className={`mt-4 flex ${isSidebarCollapsed ? 'flex-col items-center gap-3' : 'items-center gap-2'}`}>
+            <ThemeToggle
+              compact={isSidebarCollapsed}
+              className={isSidebarCollapsed ? 'justify-center px-0 py-2 w-10' : 'w-full justify-center'}
+            />
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
+              className={`inline-flex items-center justify-center rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-[#12121a] text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors ${
+                isSidebarCollapsed ? 'h-10 w-10' : 'h-10 w-10 shrink-0'
+              }`}
+              aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {isSidebarCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Navigation */}
@@ -103,14 +150,15 @@ export function Layout() {
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center rounded-lg transition-all duration-200 ${
                       isActive
                         ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
                         : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800/50'
-                    }`}
+                    } ${isSidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3'}`}
+                    title={isSidebarCollapsed ? item.label : undefined}
                   >
                     <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
+                    {!isSidebarCollapsed && <span className="font-medium">{item.label}</span>}
                   </Link>
                 </li>
               );
@@ -120,24 +168,31 @@ export function Layout() {
 
         {/* User Section */}
         <div className="p-4 border-t border-slate-200 dark:border-gray-800">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-gray-700 flex items-center justify-center">
+          <div className={`mb-4 flex ${isSidebarCollapsed ? 'justify-center' : 'items-center gap-3'}`}>
+            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-gray-700 flex items-center justify-center shrink-0">
               <User className="w-5 h-5 text-slate-600 dark:text-gray-400" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                {user?.name}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-gray-500 capitalize">{user?.role}</p>
-            </div>
+            {!isSidebarCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                  {user?.name}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-gray-500 capitalize">{user?.role}</p>
+              </div>
+            )}
           </div>
           
           <button type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+            className={`text-slate-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 ${
+              isSidebarCollapsed
+                ? 'mx-auto flex h-10 w-10 items-center justify-center'
+                : 'flex w-full items-center gap-3 px-4 py-2'
+            }`}
+            title={isSidebarCollapsed ? 'Logout' : undefined}
           >
             <LogOut className="w-5 h-5" />
-            <span className="font-medium">Logout</span>
+            {!isSidebarCollapsed && <span className="font-medium">Logout</span>}
           </button>
         </div>
       </aside>
@@ -150,7 +205,7 @@ export function Layout() {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-white/95 dark:bg-[#12121a]/95 backdrop-blur border-t border-slate-200 dark:border-gray-800">
-        <ul className="grid grid-cols-5">
+        <ul className="grid grid-cols-6">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
