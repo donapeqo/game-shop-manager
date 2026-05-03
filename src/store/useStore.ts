@@ -14,6 +14,7 @@ function shouldPowerOff(status: Pod['status']): boolean {
 }
 
 async function syncPodPowerForStatus(pod: Pod, status: Pod['status']): Promise<void> {
+  if (!useAppSettingsStore.getState().tuyaConnectivityEnabled) return;
   if (!pod.tuya_enabled || !pod.id) return;
 
   let action: 'on' | 'off' | null = null;
@@ -42,6 +43,23 @@ interface AuthState {
   checkSession: () => Promise<void>;
   clearError: () => void;
 }
+
+interface AppSettingsState {
+  tuyaConnectivityEnabled: boolean;
+  setTuyaConnectivityEnabled: (enabled: boolean) => void;
+}
+
+export const useAppSettingsStore = create<AppSettingsState>()(
+  persist(
+    (set) => ({
+      tuyaConnectivityEnabled: true,
+      setTuyaConnectivityEnabled: (enabled) => set({ tuyaConnectivityEnabled: enabled }),
+    }),
+    {
+      name: 'app-settings-storage',
+    }
+  )
+);
 
 export const useAuthStore = create<AuthState>()(
   persist(

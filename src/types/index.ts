@@ -85,3 +85,5 @@ export interface CanvasSettings {
   created_at: string;
   updated_at: string;
 }
+
+export type PlugState = 'on' | 'off' | 'offline' | 'loading' | 'disabled';

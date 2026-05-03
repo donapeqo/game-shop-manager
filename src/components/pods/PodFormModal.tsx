@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, Grid3X3, Plus, Trash2, Edit2 } from 'lucide-react';
-import { usePodStore } from '@/store/useStore';
+import { useAppSettingsStore, usePodStore } from '@/store/useStore';
 import type { Pod, Console } from '@/types';
 
 const TUYA_GATEWAY_BASE_URL = (import.meta.env.VITE_TUYA_GATEWAY_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
@@ -22,6 +22,7 @@ interface GatewayPodConfig {
 
 export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }: PodFormModalProps) {
   const { createPod, updatePod, deletePod } = usePodStore();
+  const tuyaConnectivityEnabled = useAppSettingsStore((state) => state.tuyaConnectivityEnabled);
   const isEditing = !!pod;
   
   const [name, setName] = useState(pod?.name || '');
@@ -69,6 +70,7 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
   };
 
   const registerPlugInGateway = async (podId: string) => {
+    if (!tuyaConnectivityEnabled) return;
     if (!tuyaEnabled) return;
 
     if (selectedExistingPodId) {
@@ -110,6 +112,7 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
   };
 
   const loadExistingGatewayConfigs = async () => {
+    if (!tuyaConnectivityEnabled) return;
     try {
       const response = await fetch(`${TUYA_GATEWAY_BASE_URL}/api/pods`);
       if (!response.ok) return;
@@ -296,6 +299,13 @@ export function PodFormModal({ pod, consoles, existingPods, onClose, onSuccess }
 
             {tuyaEnabled && (
               <>
+                {!tuyaConnectivityEnabled && (
+                  <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      Global Tuya connectivity is currently off in Setup. Pod settings can still be saved, but the app will not contact the gateway until you re-enable it.
+                    </p>
+                  </div>
+                )}
                 {Object.keys(existingGatewayConfigs).length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">

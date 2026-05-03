@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { Pod, Console, Session } from '@/types';
+import type { Pod, Console, Session, PlugState } from '@/types';
 import { SessionTimer } from '@/components/sessions/SessionTimer';
 import { ExtendSessionModal } from '@/components/sessions/ExtendSessionModal';
 import { 
@@ -27,12 +27,12 @@ interface DraggablePodProps {
   onEdit: () => void;
   onCreateSession: () => void;
   onPayment: () => void;
-  plugState?: 'on' | 'off' | 'offline' | 'loading';
+  plugState?: PlugState;
   showControls?: boolean;
 }
 
 const CANVAS_WIDTH = 1200;
-const CANVAS_HEIGHT = 800;
+const MIN_CANVAS_HEIGHT = 800;
 const MIN_WIDTH = 140;
 const MIN_HEIGHT = 100;
 
@@ -74,6 +74,14 @@ export function DraggablePod({
   useEffect(() => {
     setCurrentSize({ width, height });
   }, [width, height]);
+
+  const getCanvasBounds = () => {
+    const element = canvasRef.current;
+    return {
+      width: element?.clientWidth ?? CANVAS_WIDTH,
+      height: Math.max(element?.clientHeight ?? MIN_CANVAS_HEIGHT, MIN_CANVAS_HEIGHT),
+    };
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -158,14 +166,15 @@ export function DraggablePod({
     const handleMouseMove = (e: MouseEvent) => {
       const canvasRect = canvasRef.current?.getBoundingClientRect();
       if (!canvasRect) return;
+      const canvasBounds = getCanvasBounds();
       
       // Calculate new position relative to canvas
       let newX = e.clientX - canvasRect.left - dragOffset.x;
       let newY = e.clientY - canvasRect.top - dragOffset.y;
       
       // Ensure pod stays within canvas bounds
-      newX = Math.max(0, Math.min(newX, CANVAS_WIDTH - width));
-      newY = Math.max(0, Math.min(newY, CANVAS_HEIGHT - height));
+      newX = Math.max(0, Math.min(newX, canvasBounds.width - width));
+      newY = Math.max(0, Math.min(newY, canvasBounds.height - height));
       
       // Update current position in real-time (follows pointer)
       setCurrentPos({ x: newX, y: newY });
@@ -176,14 +185,15 @@ export function DraggablePod({
       
       const canvasRect = canvasRef.current?.getBoundingClientRect();
       if (!canvasRect) return;
+      const canvasBounds = getCanvasBounds();
       
       // Calculate final position
       let newX = e.clientX - canvasRect.left - dragOffset.x;
       let newY = e.clientY - canvasRect.top - dragOffset.y;
       
       // Ensure pod stays within canvas bounds
-      newX = Math.max(0, Math.min(newX, CANVAS_WIDTH - width));
-      newY = Math.max(0, Math.min(newY, CANVAS_HEIGHT - height));
+      newX = Math.max(0, Math.min(newX, canvasBounds.width - width));
+      newY = Math.max(0, Math.min(newY, canvasBounds.height - height));
       
       // Save final position
       onPositionChange(newX, newY);
@@ -205,9 +215,10 @@ export function DraggablePod({
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - resizeStart.mouseX;
       const deltaY = e.clientY - resizeStart.mouseY;
+      const canvasBounds = getCanvasBounds();
 
-      const maxWidth = CANVAS_WIDTH - positionX;
-      const maxHeight = CANVAS_HEIGHT - positionY;
+      const maxWidth = canvasBounds.width - positionX;
+      const maxHeight = canvasBounds.height - positionY;
 
       const newWidth = Math.max(MIN_WIDTH, Math.min(resizeStart.width + deltaX, maxWidth));
       const newHeight = Math.max(MIN_HEIGHT, Math.min(resizeStart.height + deltaY, maxHeight));
@@ -271,6 +282,8 @@ export function DraggablePod({
               ? 'text-green-400 border-green-500/30 bg-green-500/10'
               : plugState === 'off'
                 ? 'text-slate-700 dark:text-gray-300 border-slate-300 dark:border-gray-500/30 bg-slate-200/60 dark:bg-gray-500/10'
+                : plugState === 'disabled'
+                  ? 'text-amber-500 border-amber-500/30 bg-amber-500/10'
                 : plugState === 'loading'
                   ? 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10'
                   : 'text-red-400 border-red-500/30 bg-red-500/10'

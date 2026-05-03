@@ -7,6 +7,7 @@ import { DashboardPage } from './pages/Dashboard';
 import { PodsPage } from './pages/Pods';
 import { ConsolesPage } from './pages/Consoles';
 import { HistoryPage } from './pages/History';
+import { SetupPage } from './pages/Setup';
 import { useTheme } from './hooks/useTheme';
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/pods" element={<PodsPage />} />
             <Route path="/consoles" element={<ConsolesPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/setup" element={<SetupPage />} />
           </Route>
         </Route>
         

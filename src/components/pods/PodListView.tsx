@@ -19,7 +19,7 @@ import {
   Filter,
   Settings
 } from 'lucide-react';
-import { usePodStore } from '@/store/useStore';
+import { useAppSettingsStore, usePodStore } from '@/store/useStore';
 
 const TUYA_GATEWAY_BASE_URL = (import.meta.env.VITE_TUYA_GATEWAY_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
 type PlugState = 'on' | 'off' | 'offline' | 'loading';
@@ -60,6 +60,7 @@ function SortHeader({ field, children, sortField, sortDirection, onSort }: SortH
 
 export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSession, onPayment, showControls = false }: PodListViewProps) {
   const { updatePod, updateSession, cancelSession, completeSession } = usePodStore();
+  const tuyaConnectivityEnabled = useAppSettingsStore((state) => state.tuyaConnectivityEnabled);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('name');
@@ -71,6 +72,11 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
     let cancelled = false;
 
     const fetchPlugStates = async () => {
+      if (!tuyaConnectivityEnabled) {
+        if (!cancelled) setPlugStates({});
+        return;
+      }
+
       const tuyaPods = pods.filter((pod) => pod.tuya_enabled);
       if (tuyaPods.length === 0) {
         if (!cancelled) setPlugStates({});
@@ -121,7 +127,7 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
       cancelled = true;
       clearInterval(interval);
     };
-  }, [pods]);
+  }, [pods, tuyaConnectivityEnabled]);
 
   const getPodConsole = (pod: Pod) => {
     return consoles.find(c => c.id === pod.console_id);
@@ -243,6 +249,13 @@ export function PodListView({ pods, consoles, sessions, onEditPod, onCreateSessi
 
   const getPlugBadge = (pod: Pod) => {
     if (!pod.tuya_enabled) return <span className="text-slate-500 dark:text-gray-500">-</span>;
+    if (!tuyaConnectivityEnabled) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border text-amber-500 bg-amber-500/10 border-amber-500/20">
+          plug disabled
+        </span>
+      );
+    }
     const state = plugStates[pod.id] ?? 'loading';
     const color =
       state === 'on'
